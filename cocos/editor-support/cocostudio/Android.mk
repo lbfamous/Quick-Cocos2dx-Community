@@ -5,8 +5,6 @@ LOCAL_MODULE := cocostudio_static
 
 LOCAL_MODULE_FILENAME := libcocostudio
 
-LOCAL_ARM_MODE := arm
-
 LOCAL_SRC_FILES := 
 
 ifeq ($(CC_USE_CCSTUDIO),1)
@@ -35,7 +33,6 @@ CCSpriteFrameCacheHelper.cpp \
 CCTransformHelp.cpp \
 CCUtilMath.cpp \
 CCComAttribute.cpp \
-CCComAudio.cpp \
 CCComController.cpp \
 CCComRender.cpp \
 CCInputDelegate.cpp \
@@ -52,7 +49,6 @@ WidgetReader/SpriteReader/SpriteReader.cpp \
 WidgetReader/ParticleReader/ParticleReader.cpp \
 WidgetReader/GameMapReader/GameMapReader.cpp \
 WidgetReader/ProjectNodeReader/ProjectNodeReader.cpp \
-WidgetReader/ComAudioReader/ComAudioReader.cpp \
 WidgetReader/WidgetReader.cpp \
 WidgetReader/ButtonReader/ButtonReader.cpp \
 WidgetReader/CheckBoxReader/CheckBoxReader.cpp \
@@ -67,7 +63,6 @@ WidgetReader/TextAtlasReader/TextAtlasReader.cpp \
 WidgetReader/TextBMFontReader/TextBMFontReader.cpp \
 WidgetReader/TextFieldReader/TextFieldReader.cpp \
 WidgetReader/TextReader/TextReader.cpp \
-ActionTimeline/CCNodeReader.cpp \
 ActionTimeline/CCActionTimelineCache.cpp \
 ActionTimeline/CCFrame.cpp \
 ActionTimeline/CCTimeLine.cpp \
@@ -79,7 +74,8 @@ endif
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/..
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/.. \
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../ \
+                    $(LOCAL_PATH)/../../../external/tinyxml2 \
                     $(LOCAL_PATH)/WidgetReader
 
 LOCAL_CFLAGS += -fexceptions

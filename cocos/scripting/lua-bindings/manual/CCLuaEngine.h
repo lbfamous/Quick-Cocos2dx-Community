@@ -43,7 +43,6 @@ class LuaEngine : public ScriptEngineProtocol
 {
 public:
     static LuaEngine* getInstance(void);
-    CC_DEPRECATED_ATTRIBUTE static LuaEngine* defaultEngine(void) { return LuaEngine::getInstance(); }
     virtual ~LuaEngine(void);
     
     virtual ccScriptType getScriptType() override {
@@ -83,8 +82,6 @@ public:
      @brief Remove Lua function reference
      */
     virtual void removeScriptHandler(int nHandler) override;
-
-    virtual void removeTouchNodeEvent(Node *node) override;
     
     /**
      @brief Reallocate Lua function reference
@@ -113,16 +110,8 @@ public:
      */
     virtual int executeGlobalFunction(const char* functionName) override;
 
-    virtual int executeNodeEvent(Node* pNode, int nAction);
-    virtual int executeMenuItemEvent(MenuItem* pMenuItem);
-    virtual int executeNotificationEvent(__NotificationCenter* pNotificationCenter, const char* pszName);
-    virtual int executeCallFuncActionEvent(CallFunc* pAction, Ref* pTarget = NULL);
     virtual int executeSchedule(int nHandler, float dt, Node* pNode = NULL);
-    virtual int executeLayerTouchesEvent(Layer* pLayer, int eventType, __Set *pTouches);
-    virtual int executeLayerTouchEvent(Layer* pLayer, int eventType, Touch *pTouch);
-    virtual int executeLayerKeypadEvent(Layer* pLayer, int eventType);
     /** execute a accelerometer event */
-    virtual int executeAccelerometerEvent(Layer* pLayer, Acceleration* pAccelerationValue);
     virtual int executeEvent(int nHandler, const char* pEventName, Ref* pEventSource = NULL, const char* pEventSourceClassName = NULL);
 
     virtual bool handleAssert(const char *msg, const char *cond, const char *file, int line) override;
@@ -130,7 +119,6 @@ public:
     virtual bool parseConfig(ConfigType type, const std::string& str) override;
     virtual int sendEvent(ScriptEvent* message) override;
     virtual int handleEvent(ScriptHandlerMgr::HandlerType type,void* data);
-    virtual int handleEvent(ScriptHandlerMgr::HandlerType type, void* data, int numResults, const std::function<void(lua_State*,int)>& func);
 private:
     LuaEngine(void)
     : _stack(nullptr)
@@ -138,19 +126,10 @@ private:
     }
     bool init(void);
     int handleNodeEvent(void* data);
-    int handleMenuClickedEvent(void* data);
     int handleCallFuncActionEvent(void* data);
     int handleScheduler(void* data);
-    int handleKeypadEvent(void* data);
-    int handleAccelerometerEvent(void* data);
     int handleCommonEvent(void* data);
-    int handleTouchEvent(void* data);
-    int handleTouchesEvent(void* data);
-    int handlerControlEvent(void* data);
     int handleEvenCustom(void* data);
-    int handleAssetsManagerEvent(ScriptHandlerMgr::HandlerType type,void* data);
-    int handleTableViewEvent(ScriptHandlerMgr::HandlerType type,void* data);
-    int handleTableViewEvent(ScriptHandlerMgr::HandlerType type,void* data, int numResults, const std::function<void(lua_State*,int)>& func);
     int handleArmatureWrapper(ScriptHandlerMgr::HandlerType type,void* data);
     int handleEventAcc(void* data);
     int handleEventKeyboard(ScriptHandlerMgr::HandlerType type,void* data);

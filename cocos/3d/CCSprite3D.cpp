@@ -34,14 +34,13 @@
 #include "2d/CCLight.h"
 #include "2d/CCCamera.h"
 #include "base/ccMacros.h"
+#include "base/ccUTF8.h"
 #include "platform/CCPlatformMacros.h"
 #include "platform/CCFileUtils.h"
 #include "renderer/CCTextureCache.h"
 #include "renderer/CCRenderer.h"
 #include "renderer/CCGLProgramState.h"
 #include "renderer/CCGLProgramCache.h"
-
-#include "deprecated/CCString.h" // For StringUtils::format
 
 NS_CC_BEGIN
 
@@ -347,7 +346,7 @@ void Sprite3D::genGLProgramState(bool useLight)
         if (shader)
             glProgram = GLProgramCache::getInstance()->getGLProgram(shader);
         
-        auto programstate = GLProgramState::create(glProgram);
+        auto programstate = GLProgramState::getOrCreateWithGLProgram(glProgram);
         long offset = 0;
         auto attributeCount = mesh->getMeshVertexAttribCount();
         for (auto k = 0; k < attributeCount; k++) {
@@ -523,11 +522,11 @@ void Sprite3D::removeAllAttachNode()
 static Texture2D * getDummyTexture()
 {
     auto texture = Director::getInstance()->getTextureCache()->getTextureForKey("/dummyTexture");
-    if(!texture)
-    {
-        unsigned char data[] ={255,0,0,255};//1*1 pure red picture
-        Image * image =new (std::nothrow) Image();
-        image->initWithRawData(data,sizeof(data),1,1,sizeof(unsigned char));
+    if(!texture) {
+        unsigned char *data = (unsigned char *)malloc(4);
+        data[0] = 255; data[1] = 0; data[2] = 0; data[3] = 255;//1*1 pure red picture
+        Image * image = new (std::nothrow) Image();
+        image->initWithRawData(data, 4, 1, 1, sizeof(unsigned char));
         texture=Director::getInstance()->getTextureCache()->addImage(image,"/dummyTexture");
         image->release();
     }
@@ -704,15 +703,6 @@ std::vector<Mesh*> Sprite3D::getMeshArrayByName(const std::string& name) const
             meshes.push_back(it);
     }
     return meshes;
-}
-
-MeshSkin* Sprite3D::getSkin() const
-{
-    for (const auto& it : _meshes) {
-        if (it->getSkin())
-            return it->getSkin();
-    }
-    return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

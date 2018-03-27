@@ -193,6 +193,9 @@ bool HTTPRequest::start(void)
     retain();
 
     createURLConnectJava();
+	if (!m_httpConnect) {
+		return false;
+	}
     setRequestMethodJava();
     setTimeoutJava(m_nTimeOut*1000);
 
@@ -362,7 +365,7 @@ void HTTPRequest::update(float dt)
     Director::getInstance()->getScheduler()->unscheduleAllForTarget(this);
     if (m_curlState != kCCHTTPRequestCURLStateIdle)
     {
-        Director::getInstance()->getScheduler()->schedule(schedule_selector(HTTPRequest::checkCURLState), this, 0, false);
+        Director::getInstance()->getScheduler()->schedule(CC_SCHEDULE_SELECTOR(HTTPRequest::checkCURLState), this, 0, false);
     }
 
     if (m_state == kCCHTTPRequestStateCompleted)

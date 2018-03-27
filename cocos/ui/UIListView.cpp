@@ -37,17 +37,14 @@ _gravity(Gravity::CENTER_VERTICAL),
 _itemsMargin(0.0f),
 _curSelectedIndex(0),
 _refreshViewDirty(true),
-_listViewEventListener(nullptr),
-_listViewEventSelector(nullptr),
-_eventCallback(nullptr)
+_eventCallback(nullptr),
+_curSlideDir(ListView::Direction::NONE)
 {
     this->setTouchEnabled(true);
 }
 
 ListView::~ListView()
 {
-    _listViewEventListener = nullptr;
-    _listViewEventSelector = nullptr;
     _items.clear();
     CC_SAFE_RELEASE(_model);
 }
@@ -457,14 +454,7 @@ void ListView::doLayout()
         _refreshViewDirty = false;
     }
 }
-    
-void ListView::addEventListenerListView(Ref *target, SEL_ListViewEvent selector)
-{
-    _listViewEventListener = target;
-    _listViewEventSelector = selector;
-}
 
-    
 void ListView::addEventListener(const ccListViewCallback& callback)
 {
     _eventCallback = callback;
@@ -477,10 +467,6 @@ void ListView::selectedItemEvent(TouchEventType event)
     {
         case TouchEventType::BEGAN:
         {
-            if (_listViewEventListener && _listViewEventSelector)
-            {
-                (_listViewEventListener->*_listViewEventSelector)(this, LISTVIEW_ONSELECTEDITEM_START);
-            }
             if (_eventCallback) {
                 _eventCallback(this,EventType::ON_SELECTED_ITEM_START);
             }
@@ -492,10 +478,6 @@ void ListView::selectedItemEvent(TouchEventType event)
         break;
         default:
         {
-            if (_listViewEventListener && _listViewEventSelector)
-            {
-                (_listViewEventListener->*_listViewEventSelector)(this, LISTVIEW_ONSELECTEDITEM_END);
-            }
             if (_eventCallback) {
                 _eventCallback(this, EventType::ON_SELECTED_ITEM_END);
             }
@@ -528,6 +510,37 @@ void ListView::interceptTouchEvent(TouchEventType event, Widget *sender, Touch* 
             selectedItemEvent(event);
         }
     }
+}
+
+void ListView::onTouchMoved(Touch* touch, Event *event) {
+    if (_curSlideDir == ListView::Direction::NONE) {
+        if (fabs(touch->getDelta().x) < fabs(touch->getDelta().y)) {
+            _curSlideDir = ListView::Direction::VERTICAL;
+        } else {
+            _curSlideDir = ListView::Direction::HORIZONTAL;
+        }
+    }
+    
+    if (_curSlideDir == _direction) {
+        _propagateTouchEvents = false;
+        Layout::onTouchMoved(touch, event);
+        if (!_isInterceptTouch) {
+            handleMoveLogic(touch);
+        }
+    } else {
+        propagateTouchEvent(TouchEventType::MOVED, this, touch);
+    }
+}
+
+void ListView::onTouchEnded(Touch* touch, Event *event) {
+    _curSlideDir = ListView::Direction::NONE;
+    _propagateTouchEvents = true;
+    
+    Layout::onTouchEnded(touch, event);
+    if (!_isInterceptTouch) {
+        handleReleaseLogic(touch);
+    }
+    _isInterceptTouch = false;
 }
     
 ssize_t ListView::getCurSelectedIndex() const
@@ -569,8 +582,6 @@ void ListView::copySpecialProperties(Widget *widget)
         setItemModel(listViewEx->_model);
         setItemsMargin(listViewEx->_itemsMargin);
         setGravity(listViewEx->_gravity);
-        _listViewEventListener = listViewEx->_listViewEventListener;
-        _listViewEventSelector = listViewEx->_listViewEventSelector;
         _eventCallback = listViewEx->_eventCallback;
     }
 }

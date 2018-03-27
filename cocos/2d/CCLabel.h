@@ -238,6 +238,8 @@ public:
     // string related stuff
     int getStringNumLines() const;
     int getStringLength() const;
+    // get line at num of rendered string
+    std::string getStringOfLine(int num);
 
     FontAtlas* getFontAtlas() { return _fontAtlas; }
     
@@ -265,15 +267,7 @@ public:
 
     virtual void visit(Renderer *renderer, const Mat4 &parentTransform, uint32_t parentFlags) override;
     virtual void draw(Renderer *renderer, const Mat4 &transform, uint32_t flags) override;
-
-    CC_DEPRECATED_ATTRIBUTE static Label* create(const std::string& text, const std::string& font, float fontSize,
-        const Size& dimensions = Size::ZERO, TextHAlignment hAlignment = TextHAlignment::LEFT,
-        TextVAlignment vAlignment = TextVAlignment::TOP);
-
-    CC_DEPRECATED_ATTRIBUTE virtual void setFontDefinition(const FontDefinition& textDefinition);
-    CC_DEPRECATED_ATTRIBUTE const FontDefinition& getFontDefinition() const { return _fontDefinition; }
-
-    CC_DEPRECATED_ATTRIBUTE int getCommonLineHeight() const { return (int)getLineHeight();}
+    virtual void setCameraMask(unsigned short mask, bool applyChildren = true) override;
 
 CC_CONSTRUCTOR_ACCESS:
     /**
@@ -387,7 +381,7 @@ protected:
 
     GLuint _uniformEffectColor;
     GLuint _uniformTextColor;
-    CustomCommand _customCommand;   
+    CustomCommand _customCommand;
 
     bool    _shadowDirty;
     bool    _shadowEnabled;

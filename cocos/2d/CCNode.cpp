@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include "renderer/CCGLProgramState.h"
 #include "math/TransformUtils.h"
 
-#include "deprecated/CCString.h"
+#include "base/ccUTF8.h"
 
 #if CC_USE_PHYSICS
 #include "physics/CCPhysicsBody.h"
@@ -172,7 +172,6 @@ Node::~Node()
     {
         ScriptEngineManager::getInstance()->getScriptEngine()->removeScriptHandler(_updateScriptHandler);
     }
-    ScriptEngineManager::getInstance()->getScriptEngine()->removeTouchNodeEvent(this);
 #endif
 
     // User object has to be released before others, since userObject may have a weak reference of this node
@@ -296,13 +295,6 @@ void Node::setLocalZOrder(int z)
     }
 
     _eventDispatcher->setDirtyForNode(this);
-}
-
-/// zOrder setter : private method
-/// used internally to alter the zOrder variable. DON'T call this method manually
-void Node::_setLocalZOrder(int z)
-{
-    _localZOrder = z;
 }
 
 void Node::setGlobalZOrder(float globalZOrder)
@@ -650,9 +642,24 @@ ssize_t Node::getChildrenCount() const
 }
 
 /// isVisible getter
-bool Node::isVisible() const
+bool Node::isVisible(bool checkParent) const
 {
-    return _visible;
+    if (!checkParent) {
+        return _visible;
+    }
+    
+    // need check Parent
+    if (!_visible) {
+        return false;
+    }
+    const Node *p = _parent;
+    while (p) {
+        if (!p->isVisible(false)) {
+            return false;
+        }
+        p = p->getParent();
+    }
+    return true;
 }
 
 /// isVisible setter
@@ -1263,6 +1270,11 @@ uint32_t Node::processParentFlags(const Mat4& parentTransform, uint32_t parentFl
         }
     }
     
+    // Fixes Github issue #16100. Basically when having two cameras, one camera might set as dirty the
+    // node that is not visited by it, and might affect certain calculations. Besides, it is faster to do this.
+    if (!isVisitableByVisitingCamera())
+        return parentFlags;
+    
     uint32_t flags = parentFlags;
     flags |= (_transformUpdated ? FLAGS_TRANSFORM_DIRTY : 0);
     flags |= (_contentSizeDirty ? FLAGS_CONTENT_SIZE_DIRTY : 0);
@@ -1280,7 +1292,7 @@ uint32_t Node::processParentFlags(const Mat4& parentTransform, uint32_t parentFl
 bool Node::isVisitableByVisitingCamera() const
 {
     auto camera = Camera::getVisitingCamera();
-    bool visibleByCamera = camera ? (unsigned short)camera->getCameraFlag() & _cameraMask : true;
+    bool visibleByCamera = camera ? ((unsigned short)camera->getCameraFlag() & _cameraMask) != 0 : true;
     return visibleByCamera;
 }
 
@@ -1309,7 +1321,7 @@ void Node::visit(Renderer* renderer, const Mat4 &parentTransform, uint32_t paren
     {
         sortAllChildren();
         // draw children zOrder < 0
-        for( ; i < _children.size(); i++ )
+        for(auto size = _children.size(); i < size; i++)
         {
             auto node = _children.at(i);
 
@@ -1322,7 +1334,7 @@ void Node::visit(Renderer* renderer, const Mat4 &parentTransform, uint32_t paren
         if (visibleByCamera)
             this->draw(renderer, _modelViewTransform, flags);
 
-        for(auto it=_children.cbegin()+i; it != _children.cend(); ++it)
+        for(auto it=_children.cbegin()+i, itCend = _children.cend(); it != itCend; ++it)
             (*it)->visit(renderer, _modelViewTransform, flags);
     }
     else if (visibleByCamera)
@@ -1351,14 +1363,6 @@ void Node::onEnter()
 {
     if (_onEnterCallback)
         _onEnterCallback();
-
-#if CC_ENABLE_SCRIPT_BINDING
-    if (_scriptType == kScriptTypeJavascript)
-    {
-        if (ScriptEngineManager::sendNodeEventToJS(this, kNodeOnEnter))
-            return;
-    }
-#endif
     
     _isTransitionFinished = false;
     
@@ -1381,14 +1385,6 @@ void Node::onEnterTransitionDidFinish()
 {
     if (_onEnterTransitionDidFinishCallback)
         _onEnterTransitionDidFinishCallback();
-        
-#if CC_ENABLE_SCRIPT_BINDING
-    if (_scriptType == kScriptTypeJavascript)
-    {
-        if (ScriptEngineManager::sendNodeEventToJS(this, kNodeOnEnterTransitionDidFinish))
-            return;
-    }
-#endif
 
     _isTransitionFinished = true;
     for( const auto &child: _children)
@@ -1407,14 +1403,6 @@ void Node::onExitTransitionDidStart()
     if (_onExitTransitionDidStartCallback)
         _onExitTransitionDidStartCallback();
     
-#if CC_ENABLE_SCRIPT_BINDING
-    if (_scriptType == kScriptTypeJavascript)
-    {
-        if (ScriptEngineManager::sendNodeEventToJS(this, kNodeOnExitTransitionDidStart))
-            return;
-    }
-#endif
-    
     for( const auto &child: _children)
         child->onExitTransitionDidStart();
     
@@ -1430,14 +1418,6 @@ void Node::onExit()
 {
     if (_onExitCallback)
         _onExitCallback();
-    
-#if CC_ENABLE_SCRIPT_BINDING
-    if (_scriptType == kScriptTypeJavascript)
-    {
-        if (ScriptEngineManager::sendNodeEventToJS(this, kNodeOnExit))
-            return;
-    }
-#endif
     
     this->pause();
     
@@ -1649,19 +1629,14 @@ void Node::pause()
     _eventDispatcher->pauseEventListenersForTarget(this);
 }
 
-void Node::resumeSchedulerAndActions()
-{
-    resume();
-}
-
-void Node::pauseSchedulerAndActions()
-{
-    pause();
-}
-
 // override me
 void Node::update(float fDelta)
 {
+    if (_componentContainer && !_componentContainer->isEmpty())
+    {
+        _componentContainer->visit(fDelta);
+    }
+
 #if CC_ENABLE_SCRIPT_BINDING
     if (0 != _updateScriptHandler)
     {
@@ -1671,11 +1646,6 @@ void Node::update(float fDelta)
         ScriptEngineManager::getInstance()->getScriptEngine()->sendEvent(&event);
     }
 #endif
-    
-    if (_componentContainer && !_componentContainer->isEmpty())
-    {
-        _componentContainer->visit(fDelta);
-    }
 }
 
 // MARK: coordinates
@@ -2294,13 +2264,6 @@ void Node::setCameraMask(unsigned short mask, bool applyChildren)
             child->setCameraMask(mask, applyChildren);
         }
     }
-}
-
-// MARK: Deprecated
-
-__NodeRGBA::__NodeRGBA()
-{
-    CCLOG("NodeRGBA deprecated.");
 }
 
 NS_CC_END

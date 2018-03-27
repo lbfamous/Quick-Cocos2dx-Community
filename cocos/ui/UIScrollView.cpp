@@ -69,8 +69,6 @@ _bouncing(false),
 _bounceDir(Vec2::ZERO),
 _bounceOriginalSpeed(0.0f),
 _inertiaScrollEnabled(true),
-_scrollViewEventListener(nullptr),
-_scrollViewEventSelector(nullptr),
 _eventCallback(nullptr)
 {
     setTouchEnabled(true);
@@ -78,8 +76,6 @@ _eventCallback(nullptr)
 
 ScrollView::~ScrollView()
 {
-    _scrollViewEventListener = nullptr;
-    _scrollViewEventSelector = nullptr;
 }
 
 ScrollView* ScrollView::create()
@@ -96,14 +92,6 @@ ScrollView* ScrollView::create()
     
 void ScrollView::onEnter()
 {
-#if CC_ENABLE_SCRIPT_BINDING
-    if (_scriptType == kScriptTypeJavascript)
-    {
-        if (ScriptEngineManager::sendNodeEventToJSExtended(this, kNodeOnEnter))
-            return;
-    }
-#endif
-    
     Layout::onEnter();
     scheduleUpdate();
 }
@@ -1573,6 +1561,7 @@ void ScrollView::interceptTouchEvent(Widget::TouchEventType event, Widget *sende
     {
         case TouchEventType::BEGAN:
         {
+            _isTouchMovedCancelHighlight = false;
             _isInterceptTouch = true;
             _touchBeganPosition = touch->getLocation();
             handlePressLogic(touch);
@@ -1582,8 +1571,9 @@ void ScrollView::interceptTouchEvent(Widget::TouchEventType event, Widget *sende
         {
             float offset = (sender->getTouchBeganPosition() - touchPoint).getLength();
             _touchMovePosition = touch->getLocation();
-            if (offset > _childFocusCancelOffset)
+            if (_isTouchMovedCancelHighlight || offset > _childFocusCancelOffset)
             {
+                _isTouchMovedCancelHighlight = true;
                 sender->setHighlighted(false);
                 handleMoveLogic(touch);
             }
@@ -1608,10 +1598,6 @@ void ScrollView::interceptTouchEvent(Widget::TouchEventType event, Widget *sende
 void ScrollView::scrollToTopEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_SCROLL_TO_TOP);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::SCROLL_TO_TOP);
     }
@@ -1625,10 +1611,6 @@ void ScrollView::scrollToTopEvent()
 void ScrollView::scrollToBottomEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_SCROLL_TO_BOTTOM);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::SCROLL_TO_BOTTOM);
     }
@@ -1642,10 +1624,6 @@ void ScrollView::scrollToBottomEvent()
 void ScrollView::scrollToLeftEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_SCROLL_TO_LEFT);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::SCROLL_TO_LEFT);
     }
@@ -1659,10 +1637,6 @@ void ScrollView::scrollToLeftEvent()
 void ScrollView::scrollToRightEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_SCROLL_TO_RIGHT);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::SCROLL_TO_RIGHT);
     }
@@ -1676,10 +1650,6 @@ void ScrollView::scrollToRightEvent()
 void ScrollView::scrollingEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_SCROLLING);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::SCROLLING);
     }
@@ -1693,10 +1663,6 @@ void ScrollView::scrollingEvent()
 void ScrollView::bounceTopEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_BOUNCE_TOP);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::BOUNCE_TOP);
     }
@@ -1710,10 +1676,6 @@ void ScrollView::bounceTopEvent()
 void ScrollView::bounceBottomEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_BOUNCE_BOTTOM);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::BOUNCE_BOTTOM);
     }
@@ -1727,10 +1689,6 @@ void ScrollView::bounceBottomEvent()
 void ScrollView::bounceLeftEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_BOUNCE_LEFT);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::BOUNCE_LEFT);
     }
@@ -1744,10 +1702,6 @@ void ScrollView::bounceLeftEvent()
 void ScrollView::bounceRightEvent()
 {
     this->retain();
-    if (_scrollViewEventListener && _scrollViewEventSelector)
-    {
-        (_scrollViewEventListener->*_scrollViewEventSelector)(this, SCROLLVIEW_EVENT_BOUNCE_RIGHT);
-    }
     if (_eventCallback) {
         _eventCallback(this,EventType::BOUNCE_RIGHT);
     }
@@ -1756,12 +1710,6 @@ void ScrollView::bounceRightEvent()
         _ccEventCallback(this, static_cast<int>(EventType::BOUNCE_RIGHT));
     }
     this->release();
-}
-
-void ScrollView::addEventListenerScrollView(Ref *target, SEL_ScrollViewEvent selector)
-{
-    _scrollViewEventListener = target;
-    _scrollViewEventSelector = selector;
 }
     
 void ScrollView::addEventListener(const ccScrollViewCallback& callback)
@@ -1848,8 +1796,6 @@ void ScrollView::copySpecialProperties(Widget *widget)
         setDirection(scrollView->_direction);
         setBounceEnabled(scrollView->_bounceEnabled);
         setInertiaScrollEnabled(scrollView->_inertiaScrollEnabled);
-        _scrollViewEventListener = scrollView->_scrollViewEventListener;
-        _scrollViewEventSelector = scrollView->_scrollViewEventSelector;
         _eventCallback = scrollView->_eventCallback;
         _ccEventCallback = scrollView->_ccEventCallback;
     }

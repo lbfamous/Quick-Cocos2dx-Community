@@ -31,6 +31,27 @@
 NS_CC_BEGIN
 
 namespace StringUtils {
+    
+std::string format(const char* format, ...)
+{
+#define CC_MAX_STRING_LENGTH (1024*100)
+	
+	std::string ret;
+	
+	va_list ap;
+	va_start(ap, format);
+	
+	char* buf = (char*)malloc(CC_MAX_STRING_LENGTH);
+	if (buf != nullptr)
+	{
+		vsnprintf(buf, CC_MAX_STRING_LENGTH, format, ap);
+		ret = buf;
+		free(buf);
+	}
+	va_end(ap);
+	
+	return ret;
+}
 
 /*
  * @str:    the string to search through.
@@ -89,7 +110,8 @@ bool isCJKUnicode(char16_t ch)
         || (ch >= 0xAC00 && ch <= 0xD7AF)   // Hangul Syllables
         || (ch >= 0xF900 && ch <= 0xFAFF)   // CJK Compatibility Ideographs
         || (ch >= 0xFE30 && ch <= 0xFE4F)   // CJK Compatibility Forms
-        || (ch >= 0x31C0 && ch <= 0x4DFF);  // Other exiensions
+        || (ch >= 0x31C0 && ch <= 0x4DFF)   // Other extensions
+        || (ch >= 0x1f004 && ch <= 0x1f682);// Emoji
 }
 
 void trimUTF16Vector(std::vector<char16_t>& str)
@@ -167,133 +189,61 @@ std::vector<char16_t> getChar16VectorFromUTF16String(const std::u16string& utf16
     return ret;
 }
 
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID) 
+std::string getStringUTFCharsJNI(JNIEnv* env, jstring srcjStr, bool* ret)
+{
+    std::string utf8Str;
+    if(srcjStr != nullptr)
+    {
+        const unsigned short * unicodeChar = ( const unsigned short *)env->GetStringChars(srcjStr, nullptr);
+        size_t unicodeCharLength = env->GetStringLength(srcjStr);
+        const std::u16string unicodeStr((const char16_t *)unicodeChar, unicodeCharLength);
+        bool flag = UTF16ToUTF8(unicodeStr, utf8Str);
+        if (ret)
+        {
+            *ret = flag;
+        }
+        if (!flag)
+        {
+            utf8Str = "";
+        }
+        env->ReleaseStringChars(srcjStr, unicodeChar);
+    }
+    else
+    {
+        if (ret)
+        {
+            *ret = false;
+        }
+        utf8Str = "";
+    }
+    return utf8Str;
+}
+
+jstring newStringUTFJNI(JNIEnv* env, const std::string& utf8Str, bool* ret)
+{
+    std::u16string utf16Str;
+    bool flag = cocos2d::StringUtils::UTF8ToUTF16(utf8Str, utf16Str);
+
+    if (ret)
+    {
+        *ret = flag;
+    }
+
+    if(!flag)
+    {
+        utf16Str.clear();
+    }
+    jstring stringText = env->NewString((const jchar*)utf16Str.data(), utf16Str.length());
+    return stringText;
+}
+#endif
+
 long getCharacterCountInUTF8String(const std::string& utf8)
 {
     return getUTF8StringLength((const UTF8*)utf8.c_str());
 }
 
 } //namespace StringUtils {
-
-
-int cc_wcslen(const unsigned short* str)
-{
-    if (str == nullptr)
-        return -1;
-    int i=0;
-    while(*str++) i++;
-    return i;
-}
-
-void cc_utf8_trim_ws(std::vector<unsigned short>* str)
-{
-    if (str == nullptr)
-        return;
-    // unsigned short and char16_t are both 2 bytes
-    std::vector<char16_t>* ret = reinterpret_cast<std::vector<char16_t>*>(str);
-    StringUtils::trimUTF16Vector(*ret);
-}
-
-bool isspace_unicode(unsigned short ch)
-{
-    return StringUtils::isUnicodeSpace(ch);
-}
-
-
-bool iscjk_unicode(unsigned short ch)
-{
-    return StringUtils::isCJKUnicode(ch);
-}
-
-
-long cc_utf8_strlen (const char * p, int max)
-{
-    CC_UNUSED_PARAM(max);
-    if (p == nullptr)
-        return -1;
-    return StringUtils::getCharacterCountInUTF8String(p);
-}
-
-unsigned int cc_utf8_find_last_not_char(const std::vector<unsigned short>& str, unsigned short c)
-{
-    std::vector<char16_t> char16Vector;
-    for (const auto& e : str)
-    {
-        char16Vector.push_back(e);
-    }
-    
-    return StringUtils::getIndexOfLastNotChar16(char16Vector, c);
-}
-
-std::vector<unsigned short> cc_utf16_vec_from_utf16_str(const unsigned short* str)
-{
-    std::vector<unsigned short> str_new;
-    
-    if (str == nullptr)
-        return str_new;
-    
-    int len = cc_wcslen(str);
-    
-    for (int i = 0; i < len; ++i)
-    {
-        str_new.push_back(str[i]);
-    }
-    return str_new;
-}
-
-unsigned short* cc_utf8_to_utf16(const char* str_old, int length/* = -1*/, int* rUtf16Size/* = nullptr*/)
-{
-    if (str_old == nullptr)
-        return nullptr;
-    
-    unsigned short* ret = nullptr;
-    
-    std::u16string outUtf16;
-    bool succeed = StringUtils::UTF8ToUTF16(str_old, outUtf16);
-    
-    if (succeed)
-    {
-        ret = new unsigned short[outUtf16.length() + 1];
-        ret[outUtf16.length()] = 0;
-        memcpy(ret, outUtf16.data(), outUtf16.length() * sizeof(unsigned short));
-        if (rUtf16Size)
-        {
-            *rUtf16Size = static_cast<int>(outUtf16.length());
-        }
-    }
-    
-    return ret;
-}
-
-char * cc_utf16_to_utf8 (const unsigned short  *str,
-                  int             len,
-                  long            *items_read,
-                  long            *items_written)
-{
-    if (str == nullptr)
-        return nullptr;
-    
-    
-    std::u16string utf16;
-    int utf16Len = len < 0 ? cc_wcslen(str) : len;
-    
-    for (int i = 0; i < utf16Len; ++i)
-    {
-        utf16.push_back(str[i]);
-    }
-    
-    char* ret = nullptr;
-    std::string outUtf8;
-    bool succeed = StringUtils::UTF16ToUTF8(utf16, outUtf8);
-    
-    if (succeed)
-    {
-        ret = new char[outUtf8.length() + 1];
-        ret[outUtf8.length()] = '\0';
-        memcpy(ret, outUtf8.data(), outUtf8.length());
-    }
-    
-    return ret;
-}
-
 
 NS_CC_END

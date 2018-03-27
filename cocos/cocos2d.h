@@ -109,11 +109,8 @@ THE SOFTWARE.
 #include "2d/CCNode.h"
 #include "2d/CCProtectedNode.h"
 #include "2d/CCAtlasNode.h"
-#include "2d/CCDrawingPrimitives.h"
 #include "2d/CCDrawNode.h"
 #include "2d/CCLabelAtlas.h"
-#include "2d/CCLabelTTF.h"
-#include "2d/CCLabelBMFont.h"
 #include "2d/CCLabel.h"
 #include "2d/CCFontFNT.h"
 #include "2d/CCLayer.h"
@@ -121,8 +118,6 @@ THE SOFTWARE.
 #include "2d/CCTransition.h"
 #include "2d/CCTransitionPageTurn.h"
 #include "2d/CCTransitionProgress.h"
-#include "2d/CCMenu.h"
-#include "2d/CCMenuItem.h"
 #include "2d/CCClippingNode.h"
 #include "2d/CCClippingRectangleNode.h"
 #include "2d/CCMotionStreak.h"
@@ -241,12 +236,10 @@ THE SOFTWARE.
 #include "renderer/CCTextureAtlas.h"
 
 // tilemap_parallax_nodes
-#include "2d/CCParallaxNode.h"
 #include "2d/CCTMXLayer.h"
 #include "2d/CCTMXObjectGroup.h"
 #include "2d/CCTMXTiledMap.h"
 #include "2d/CCTMXXMLParser.h"
-#include "2d/CCTileMapAtlas.h"
 #include "2d/CCFastTMXTiledMap.h"
 #include "2d/CCFastTMXLayer.h"
 
@@ -268,20 +261,6 @@ THE SOFTWARE.
 #include "3d/CCMeshVertexIndexData.h"
 #include "3d/CCSkeleton3D.h"
 #include "3d/CCBillBoard.h"
-
-// Deprecated include
-#include "deprecated/CCDictionary.h"
-#include "deprecated/CCArray.h"
-#include "deprecated/CCSet.h"
-#include "deprecated/CCInteger.h"
-#include "deprecated/CCFloat.h"
-#include "deprecated/CCDouble.h"
-#include "deprecated/CCBool.h"
-#include "deprecated/CCString.h"
-#include "deprecated/CCNotificationCenter.h"
-// CCDeprecated.h must be included at the end
-#include "deprecated/CCDeprecated.h"
-
 
 NS_CC_BEGIN
 

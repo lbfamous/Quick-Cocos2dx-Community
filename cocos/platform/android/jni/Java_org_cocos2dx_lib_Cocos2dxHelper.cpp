@@ -29,7 +29,6 @@ THE SOFTWARE.
 #include "JniHelper.h"
 #include "CCFileUtils-android.h"
 #include "android/asset_manager_jni.h"
-#include "deprecated/CCString.h"
 #include "Java_org_cocos2dx_lib_Cocos2dxHelper.h"
 
 #define  LOG_TAG    "Java_org_cocos2dx_lib_Cocos2dxHelper.cpp"
@@ -97,34 +96,6 @@ void showDialogJNI(const char * message, const char * title) {
 
         jstring stringArg2 = t.env->NewStringUTF(message);
         t.env->CallStaticVoidMethod(t.classID, t.methodID, stringArg1, stringArg2);
-
-        t.env->DeleteLocalRef(stringArg1);
-        t.env->DeleteLocalRef(stringArg2);
-        t.env->DeleteLocalRef(t.classID);
-    }
-}
-
-void showEditTextDialogJNI(const char* title, const char* message, int inputMode, int inputFlag, int returnType, int maxLength, EditTextCallback callback, void* ctx) {
-    if (message == nullptr) {
-        return;
-    }
-
-    s_editTextCallback = callback;
-    s_ctx = ctx;
-
-    JniMethodInfo t;
-    if (JniHelper::getStaticMethodInfo(t, CLASS_NAME, "showEditTextDialog", "(Ljava/lang/String;Ljava/lang/String;IIII)V")) {
-        jstring stringArg1;
-
-        if (!title) {
-            stringArg1 = t.env->NewStringUTF("");
-        } else {
-            stringArg1 = t.env->NewStringUTF(title);
-        }
-
-        jstring stringArg2 = t.env->NewStringUTF(message);
-
-        t.env->CallStaticVoidMethod(t.classID, t.methodID, stringArg1, stringArg2,inputMode, inputFlag, returnType, maxLength);
 
         t.env->DeleteLocalRef(stringArg1);
         t.env->DeleteLocalRef(stringArg2);

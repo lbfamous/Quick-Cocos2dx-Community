@@ -29,7 +29,6 @@ THE SOFTWARE.
 #include "renderer/CCGLProgramCache.h"
 #include "renderer/ccGLStateCache.h"
 #include "base/CCDirector.h"
-#include "2d/CCDrawingPrimitives.h"
 #include "renderer/CCRenderer.h"
 #include "ui/UILayoutManager.h"
 #include "2d/CCDrawNode.h"
@@ -69,11 +68,11 @@ _alongVector(Vec2(0.0f, -1.0f)),
 _cOpacity(255),
 _clippingEnabled(false),
 _layoutType(Type::ABSOLUTE),
-_clippingType(ClippingType::STENCIL),
+_clippingType(ClippingType::SCISSOR),
 _clippingStencil(nullptr),
 _scissorRectDirty(false),
 _clippingRect(Rect::ZERO),
-_clippingParent(nullptr),
+_clippingOldRect(Rect::ZERO),
 _clippingRectDirty(true),
 _currentStencilEnabled(GL_FALSE),
 _currentStencilWriteMask(~0),
@@ -103,14 +102,6 @@ Layout::~Layout()
     
 void Layout::onEnter()
 {
-#if CC_ENABLE_SCRIPT_BINDING
-    if (_scriptType == kScriptTypeJavascript)
-    {
-        if (ScriptEngineManager::sendNodeEventToJSExtended(this, kNodeOnEnter))
-            return;
-    }
-#endif
-    
     Widget::onEnter();
     if (_clippingStencil)
     {
@@ -275,7 +266,7 @@ void Layout::stencilClippingVisit(Renderer *renderer, const Mat4& parentTransfor
     //
     // draw children and protectedChildren zOrder < 0
     //
-    for( ; i < _children.size(); i++ )
+    for(auto size = _children.size(); i < size; i++)
     {
         auto node = _children.at(i);
         
@@ -285,7 +276,7 @@ void Layout::stencilClippingVisit(Renderer *renderer, const Mat4& parentTransfor
             break;
     }
     
-    for( ; j < _protectedChildren.size(); j++ )
+    for(auto size = _protectedChildren.size() ; j < size; j++ )
     {
         auto node = _protectedChildren.at(j);
         
@@ -303,10 +294,10 @@ void Layout::stencilClippingVisit(Renderer *renderer, const Mat4& parentTransfor
     //
     // draw children and protectedChildren zOrder >= 0
     //
-    for(auto it=_protectedChildren.cbegin()+j; it != _protectedChildren.cend(); ++it)
+    for(auto it=_protectedChildren.cbegin()+j, itCend = _protectedChildren.cend(); it != itCend; ++it)
         (*it)->visit(renderer, _modelViewTransform, flags);
     
-    for(auto it=_children.cbegin()+i; it != _children.cend(); ++it)
+    for(auto it=_children.cbegin()+i, itCend = _children.cend(); it != itCend; ++it)
         (*it)->visit(renderer, _modelViewTransform, flags);
 
     
@@ -347,7 +338,7 @@ void Layout::onBeforeVisitStencil()
     glStencilFunc(GL_NEVER, mask_layer, mask_layer);
     glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
 }
-    
+
 void Layout::drawFullScreenQuadClearStencil()
 {
     Director* director = Director::getInstance();
@@ -377,8 +368,8 @@ void Layout::drawFullScreenQuadClearStencil()
     glProgram->setUniformsForBuiltins();
     glProgram->setUniformLocationWith4fv(colorLocation, (GLfloat*) &color.r, 1);
     
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     GL::enableVertexAttribs( GL::VERTEX_ATTRIB_FLAG_POSITION );
-    
     glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -410,24 +401,51 @@ void Layout::onAfterVisitStencil()
     
 void Layout::onBeforeVisitScissor()
 {
-    Rect clippingRect = getClippingRect();
-    glEnable(GL_SCISSOR_TEST);
     auto glview = Director::getInstance()->getOpenGLView();
+    if (glview->isScissorEnabled())
+    {
+        GLfloat params[4];
+        glGetFloatv(GL_SCISSOR_BOX, params);
+        _clippingOldRect = Rect(params[0], params[1], params[2], params[3]);
+    } else {
+        glEnable(GL_SCISSOR_TEST);
+    }
+    
+    Rect clippingRect = getClippingRect();
     glview->setScissorInPoints(clippingRect.origin.x, clippingRect.origin.y, clippingRect.size.width, clippingRect.size.height);
+    CHECK_GL_ERROR_DEBUG();
 }
 
 void Layout::onAfterVisitScissor()
 {
-    glDisable(GL_SCISSOR_TEST);
+    // revert scissor box
+    if (!_clippingOldRect.equals(Rect::ZERO)) {
+        glScissor(_clippingOldRect.origin.x,
+                  _clippingOldRect.origin.y,
+                  _clippingOldRect.size.width,
+                  _clippingOldRect.size.height);
+    } else {
+        glDisable(GL_SCISSOR_TEST);
+    }
 }
     
 void Layout::scissorClippingVisit(Renderer *renderer, const Mat4& parentTransform, uint32_t parentFlags)
 {
+    if(!_visible)
+        return;
+    
+    // check if self was dirty, not only parent
+    uint32_t flags = processParentFlags(parentTransform, parentFlags);
+    if (flags & FLAGS_DIRTY_MASK)
+    {
+        _clippingRectDirty = true;
+    }
+    
     _beforeVisitCmdScissor.init(_globalZOrder);
     _beforeVisitCmdScissor.func = CC_CALLBACK_0(Layout::onBeforeVisitScissor, this);
     renderer->addCommand(&_beforeVisitCmdScissor);
 
-    ProtectedNode::visit(renderer, parentTransform, parentFlags);
+    ProtectedNode::visit(renderer, parentTransform, flags);
     
     _afterVisitCmdScissor.init(_globalZOrder);
     _afterVisitCmdScissor.func = CC_CALLBACK_0(Layout::onAfterVisitScissor, this);
@@ -513,75 +531,46 @@ void Layout::setStencilClippingSize(const Size &size)
     
 const Rect& Layout::getClippingRect() 
 {
-    if (_clippingRectDirty)
-    {
+    if (_clippingRectDirty) {
         Vec2 worldPos = convertToWorldSpace(Vec2::ZERO);
         AffineTransform t = getNodeToWorldAffineTransform();
         float scissorWidth = _contentSize.width*t.a;
         float scissorHeight = _contentSize.height*t.d;
-        Rect parentClippingRect;
-        Layout* parent = this;
-
-        while (parent)
-        {
-            parent = dynamic_cast<Layout*>(parent->getParent());
-            if(parent)
-            {
-                if (parent->isClippingEnabled())
-                {
-                    _clippingParent = parent;
+        
+        Rect pRect = Rect::ZERO;
+        Node* parent = this;
+        while (parent) {
+            parent = parent->getParent();
+            Layout *layout = dynamic_cast<Layout*>(parent);
+            if(layout) {
+                if (layout->isClippingEnabled()) {
+                    pRect = layout->getClippingRect();
                     break;
                 }
             }
         }
         
-        if (_clippingParent)
-        {
-            parentClippingRect = _clippingParent->getClippingRect();
-            float finalX = worldPos.x - (scissorWidth * _anchorPoint.x);
-            float finalY = worldPos.y - (scissorHeight * _anchorPoint.y);
-            float finalWidth = scissorWidth;
-            float finalHeight = scissorHeight;
-            
-            float leftOffset = worldPos.x - parentClippingRect.origin.x;
-            if (leftOffset < 0.0f)
+        if (!pRect.equals(Rect::ZERO)) {
+            // check collision
+            float centerXdelta = (scissorWidth + pRect.size.width) / 2;
+            float centerYdelta = (scissorHeight + pRect.size.height) / 2;
+            if (std::abs((worldPos.x + scissorWidth / 2) - (pRect.origin.x + pRect.size.width / 2)) <= centerXdelta
+                && std::abs((worldPos.y + scissorHeight / 2) - (pRect.origin.y + pRect.size.height / 2)) <= centerYdelta)
             {
-                finalX = parentClippingRect.origin.x;
-                finalWidth += leftOffset;
+                // get Intersecting rectangle
+                _clippingRect.origin.x = std::max(worldPos.x, pRect.origin.x);
+                _clippingRect.origin.y = std::max(worldPos.y, pRect.origin.y);
+                _clippingRect.size.width = std::min(worldPos.x + scissorWidth - _clippingRect.origin.x,
+                                            pRect.origin.x + pRect.size.width - _clippingRect.origin.x);
+                _clippingRect.size.height = std::min(worldPos.y + scissorHeight - _clippingRect.origin.y,
+                                            pRect.origin.y + pRect.size.height - _clippingRect.origin.y);
+            } else {
+                //ZERO rect will auto disable Scissor clip, cheat with below code.
+                _clippingRect = Rect(-1,-1,1,1);
             }
-            float rightOffset = (worldPos.x + scissorWidth) - (parentClippingRect.origin.x + parentClippingRect.size.width);
-            if (rightOffset > 0.0f)
-            {
-                finalWidth -= rightOffset;
-            }
-            float topOffset = (worldPos.y + scissorHeight) - (parentClippingRect.origin.y + parentClippingRect.size.height);
-            if (topOffset > 0.0f)
-            {
-                finalHeight -= topOffset;
-            }
-            float bottomOffset = worldPos.y - parentClippingRect.origin.y;
-            if (bottomOffset < 0.0f)
-            {
-                finalY = parentClippingRect.origin.x;
-                finalHeight += bottomOffset;
-            }
-            if (finalWidth < 0.0f)
-            {
-                finalWidth = 0.0f;
-            }
-            if (finalHeight < 0.0f)
-            {
-                finalHeight = 0.0f;
-            }
-            _clippingRect.origin.x = finalX;
-            _clippingRect.origin.y = finalY;
-            _clippingRect.size.width = finalWidth;
-            _clippingRect.size.height = finalHeight;
-        }
-        else
-        {
-            _clippingRect.origin.x = worldPos.x - (scissorWidth * _anchorPoint.x);
-            _clippingRect.origin.y = worldPos.y - (scissorHeight * _anchorPoint.y);
+        } else {
+            _clippingRect.origin.x = worldPos.x;
+            _clippingRect.origin.y = worldPos.y;
             _clippingRect.size.width = scissorWidth;
             _clippingRect.size.height = scissorHeight;
         }
@@ -677,7 +666,7 @@ void Layout::setBackGroundImageCapInsets(const Rect &capInsets)
         _backGroundImage->setCapInsets(capInsets);
     }
 }
-    
+
 const Rect& Layout::getBackGroundImageCapInsets()const
 {
     return _backGroundImageCapInsets;
@@ -1891,6 +1880,14 @@ Widget* Layout::findNextFocusedWidget(FocusDirection direction, Widget* current)
     else
     {
         return current;
+    }
+}
+    
+void Layout::setCameraMask(unsigned short mask, bool applyChildren)
+{
+    Widget::setCameraMask(mask, applyChildren);
+    if (_clippingStencil){
+        _clippingStencil->setCameraMask(mask, applyChildren);
     }
 }
     

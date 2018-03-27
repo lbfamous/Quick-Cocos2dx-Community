@@ -1,7 +1,7 @@
 /****************************************************************************
 Copyright (c) 2009      Jason Booth
 Copyright (c) 2010-2012 cocos2d-x.org
-Copyright (c) 2013-2014 Chukong Technologies Inc.
+Copyright (c) 2013-2016 Chukong Technologies Inc.
 
 http://www.cocos2d-x.org
 
@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include "base/CCEventListenerCustom.h"
 #include "base/CCEventDispatcher.h"
 #include "renderer/CCRenderer.h"
-
+#include "renderer/CCTextureCache.h"
 
 NS_CC_BEGIN
 
@@ -46,6 +46,7 @@ RenderTexture::RenderTexture()
 , _fullviewPort(Rect::ZERO)
 , _FBO(0)
 , _depthRenderBufffer(0)
+, _stencilRenderBufffer(0)
 , _oldFBO(0)
 , _texture(0)
 , _textureCopy(0)
@@ -57,7 +58,6 @@ RenderTexture::RenderTexture()
 , _clearStencil(0)
 , _autoDraw(false)
 , _sprite(nullptr)
-, _saveFileCallback(nullptr)
 {
 #if CC_ENABLE_CACHE_TEXTURE_DATA
     // Listen this event to save render texture before come to background.
@@ -80,14 +80,19 @@ RenderTexture::~RenderTexture()
     {
         glDeleteRenderbuffers(1, &_depthRenderBufffer);
     }
+
+    if (_stencilRenderBufffer)
+    {
+        glDeleteRenderbuffers(1, &_stencilRenderBufffer);
+    }
+
     CC_SAFE_DELETE(_UITextureImage);
 }
 
-void RenderTexture::listenToBackground(EventCustom *event)
+void RenderTexture::listenToBackground(EventCustom* /*event*/)
 {
     // We have not found a way to dispatch the enter background message before the texture data are destroyed.
     // So we disable this pair of message handler at present.
-#if 0
 #if CC_ENABLE_CACHE_TEXTURE_DATA
     CC_SAFE_DELETE(_UITextureImage);
     
@@ -112,12 +117,10 @@ void RenderTexture::listenToBackground(EventCustom *event)
     glDeleteFramebuffers(1, &_FBO);
     _FBO = 0;
 #endif
-#endif
 }
 
-void RenderTexture::listenToForeground(EventCustom *event)
+void RenderTexture::listenToForeground(EventCustom* /*event*/)
 {
-#if 0
 #if CC_ENABLE_CACHE_TEXTURE_DATA
     // -- regenerate frame buffer object and attach the texture
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_oldFBO);
@@ -134,7 +137,6 @@ void RenderTexture::listenToForeground(EventCustom *event)
     
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->getName(), 0);
     glBindFramebuffer(GL_FRAMEBUFFER, _oldFBO);
-#endif
 #endif
 }
 
@@ -255,17 +257,56 @@ bool RenderTexture::initWithWidthAndHeight(int w, int h, Texture2D::PixelFormat 
 
         if (depthStencilFormat != 0)
         {
+#if(CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+            if(Configuration::getInstance()->supportsOESPackedDepthStencil())
+            {
+                //create and attach depth buffer
+                glGenRenderbuffers(1, &_depthRenderBufffer);
+                glBindRenderbuffer(GL_RENDERBUFFER, _depthRenderBufffer);
+                glRenderbufferStorage(GL_RENDERBUFFER, depthStencilFormat, (GLsizei)powW, (GLsizei)powH);
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depthRenderBufffer);
+
+                // if depth format is the one with stencil part, bind same render buffer as stencil attachment
+                if (depthStencilFormat == GL_DEPTH24_STENCIL8)
+                {
+                    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _depthRenderBufffer);
+                }
+            }
+            else
+            {
+                glGenRenderbuffers(1, &_depthRenderBufffer);
+                glGenRenderbuffers(1, &_stencilRenderBufffer);
+                glBindRenderbuffer(GL_RENDERBUFFER, _depthRenderBufffer);
+                
+                if(Configuration::getInstance()->supportsOESDepth24())
+                {
+                    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, (GLsizei)powW, (GLsizei)powH);
+                }
+                else
+                {
+                    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, (GLsizei)powW, (GLsizei)powH);
+                }
+                
+                glBindRenderbuffer(GL_RENDERBUFFER, _stencilRenderBufffer);
+                glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,  (GLsizei)powW, (GLsizei)powH);
+                
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depthRenderBufffer);
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                          GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _stencilRenderBufffer);
+            }
+#else
             //create and attach depth buffer
             glGenRenderbuffers(1, &_depthRenderBufffer);
             glBindRenderbuffer(GL_RENDERBUFFER, _depthRenderBufffer);
             glRenderbufferStorage(GL_RENDERBUFFER, depthStencilFormat, (GLsizei)powW, (GLsizei)powH);
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depthRenderBufffer);
-
+            
             // if depth format is the one with stencil part, bind same render buffer as stencil attachment
             if (depthStencilFormat == GL_DEPTH24_STENCIL8)
             {
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _depthRenderBufffer);
             }
+#endif
         }
 
         // check if it worked (probably worth doing :) )
@@ -280,11 +321,12 @@ bool RenderTexture::initWithWidthAndHeight(int w, int h, Texture2D::PixelFormat 
         _sprite->setFlippedY(true);
 
         _sprite->setBlendFunc( BlendFunc::ALPHA_PREMULTIPLIED );
+        _sprite->setOpacityModifyRGB(true);
 
         glBindRenderbuffer(GL_RENDERBUFFER, oldRBO);
         glBindFramebuffer(GL_FRAMEBUFFER, _oldFBO);
         
-        // Diabled by default.
+        // Disabled by default.
         _autoDraw = false;
         
         // add sprite for backward compatibility
@@ -296,6 +338,13 @@ bool RenderTexture::initWithWidthAndHeight(int w, int h, Texture2D::PixelFormat 
     CC_SAFE_FREE(data);
     
     return ret;
+}
+
+void RenderTexture::setSprite(Sprite* sprite)
+{
+    CC_SAFE_RETAIN(sprite);
+    CC_SAFE_RELEASE(_sprite);
+    _sprite = sprite;
 }
 
 void RenderTexture::setKeepMatrix(bool keepMatrix)
@@ -383,12 +432,12 @@ void RenderTexture::clearStencil(int stencilValue)
 void RenderTexture::visit(Renderer *renderer, const Mat4 &parentTransform, uint32_t parentFlags)
 {
     // override visit.
-	// Don't call visit on its children
-    if (!_visible || !isVisitableByVisitingCamera())
+    // Don't call visit on its children
+    if (!_visible)
     {
         return;
     }
-	
+    
     uint32_t flags = processParentFlags(parentTransform, parentFlags);
 
     Director* director = Director::getInstance();
@@ -399,7 +448,10 @@ void RenderTexture::visit(Renderer *renderer, const Mat4 &parentTransform, uint3
     director->loadMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW, _modelViewTransform);
 
     _sprite->visit(renderer, _modelViewTransform, flags);
-    draw(renderer, _modelViewTransform, flags);
+    if (isVisitableByVisitingCamera())
+    {
+        draw(renderer, _modelViewTransform, flags);
+    }
     
     director->popMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
 
@@ -408,60 +460,8 @@ void RenderTexture::visit(Renderer *renderer, const Mat4 &parentTransform, uint3
     // setOrderOfArrival(0);
 }
 
-bool RenderTexture::saveToFile(const std::string& filename, bool isRGBA, std::function<void (RenderTexture*, const std::string&)> callback)
-{
-    std::string basename(filename);
-    std::transform(basename.begin(), basename.end(), basename.begin(), ::tolower);
-    
-    if (basename.find(".png") != std::string::npos)
-    {
-        return saveToFile(filename, Image::Format::PNG, isRGBA, callback);
-    }
-    else if (basename.find(".jpg") != std::string::npos)
-    {
-        if (isRGBA) CCLOG("RGBA is not supported for JPG format.");
-        return saveToFile(filename, Image::Format::JPG, false, callback);
-    }
-    else
-    {
-        CCLOG("Only PNG and JPG format are supported now!");
-    }
-    
-    return saveToFile(filename, Image::Format::JPG, false, callback);
-}
-
-bool RenderTexture::saveToFile(const std::string& fileName, Image::Format format, bool isRGBA, std::function<void (RenderTexture*, const std::string&)> callback)
-{
-    CCASSERT(format == Image::Format::JPG || format == Image::Format::PNG,
-             "the image can only be saved as JPG or PNG format");
-    if (isRGBA && format == Image::Format::JPG) CCLOG("RGBA is not supported for JPG format");
-    
-    _saveFileCallback = callback;
-    
-    std::string fullpath = FileUtils::getInstance()->getWritablePath() + fileName;
-    _saveToFileCommand.init(_globalZOrder);
-    _saveToFileCommand.func = CC_CALLBACK_0(RenderTexture::onSaveToFile, this, fullpath, isRGBA);
-    
-    Director::getInstance()->getRenderer()->addCommand(&_saveToFileCommand);
-    return true;
-}
-
-void RenderTexture::onSaveToFile(const std::string& filename, bool isRGBA)
-{
-    Image *image = newImage(true);
-    if (image)
-    {
-        image->saveToFile(filename.c_str(), !isRGBA);
-    }
-    if(_saveFileCallback)
-    {
-        _saveFileCallback(this, filename);
-    }
-    CC_SAFE_DELETE(image);
-}
-
 /* get buffer as Image */
-Image* RenderTexture::newImage(bool fliimage)
+Image* RenderTexture::newImage(bool flipImage)
 {
     CCASSERT(_pixelFormat == Texture2D::PixelFormat::RGBA8888, "only RGBA8888 can be saved as image");
 
@@ -471,76 +471,54 @@ Image* RenderTexture::newImage(bool fliimage)
     }
 
     const Size& s = _texture->getContentSizeInPixels();
-
-    // to get the image size to save
-    //        if the saving image domain exceeds the buffer texture domain,
-    //        it should be cut
+    // must float -> int
     int savedBufferWidth = (int)s.width;
     int savedBufferHeight = (int)s.height;
 
-    GLubyte *buffer = nullptr;
-    GLubyte *tempData = nullptr;
-    Image *image = new (std::nothrow) Image();
+    ssize_t dataLen = savedBufferWidth * savedBufferHeight * 4;
+    GLubyte *buffer = (GLubyte *)malloc(dataLen);
+    if (!buffer){
+        return nullptr;
+    }
 
-    do
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_oldFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, _FBO);
+
+    // TODO: move this to configuration, so we don't check it every time
+    /*  Certain Qualcomm Adreno GPU's will retain data in memory after a frame buffer switch which corrupts the render to the texture. The solution is to clear the frame buffer before rendering to the texture. However, calling glClear has the unintended result of clearing the current texture. Create a temporary texture to overcome this. At the end of RenderTexture::begin(), switch the attached texture to the second one, call glClear, and then switch back to the original texture. This solution is unnecessary for other devices as they don't have the same issue with switching frame buffers.
+     */
+    if (Configuration::getInstance()->checkForGLExtension("GL_QCOM"))
     {
-        CC_BREAK_IF(! (buffer = new (std::nothrow) GLubyte[savedBufferWidth * savedBufferHeight * 4]));
-
-        if(! (tempData = new (std::nothrow) GLubyte[savedBufferWidth * savedBufferHeight * 4]))
-        {
-            delete[] buffer;
-            buffer = nullptr;
-            break;
+        // -- bind a temporary texture so we can clear the render buffer without losing our texture
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textureCopy->getName(), 0);
+        CHECK_GL_ERROR_DEBUG();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->getName(), 0);
+    }
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, savedBufferWidth, savedBufferHeight, GL_RGBA,GL_UNSIGNED_BYTE, buffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, _oldFBO);
+    
+    if (flipImage) {
+        GLubyte *flippedBuffer = (GLubyte *)malloc(dataLen);
+        for (int row = 0; row < savedBufferHeight; ++row) {
+            memcpy(flippedBuffer + (savedBufferHeight - row - 1) * savedBufferWidth * 4,
+                   buffer + row * savedBufferWidth * 4,
+                   savedBufferWidth * 4);
         }
+        free(buffer);
+        buffer = flippedBuffer;
+    }
 
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_oldFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, _FBO);
-
-        // TODO: move this to configration, so we don't check it every time
-        /*  Certain Qualcomm Andreno gpu's will retain data in memory after a frame buffer switch which corrupts the render to the texture. The solution is to clear the frame buffer before rendering to the texture. However, calling glClear has the unintended result of clearing the current texture. Create a temporary texture to overcome this. At the end of RenderTexture::begin(), switch the attached texture to the second one, call glClear, and then switch back to the original texture. This solution is unnecessary for other devices as they don't have the same issue with switching frame buffers.
-         */
-        if (Configuration::getInstance()->checkForGLExtension("GL_QCOM"))
-        {
-            // -- bind a temporary texture so we can clear the render buffer without losing our texture
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textureCopy->getName(), 0);
-            CHECK_GL_ERROR_DEBUG();
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->getName(), 0);
-        }
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        glReadPixels(0,0,savedBufferWidth, savedBufferHeight,GL_RGBA,GL_UNSIGNED_BYTE, tempData);
-        glBindFramebuffer(GL_FRAMEBUFFER, _oldFBO);
-
-        if ( fliimage ) // -- flip is only required when saving image to file
-        {
-            // to get the actual texture data
-            // #640 the image read from rendertexture is dirty
-            for (int i = 0; i < savedBufferHeight; ++i)
-            {
-                memcpy(&buffer[i * savedBufferWidth * 4],
-                       &tempData[(savedBufferHeight - i - 1) * savedBufferWidth * 4],
-                       savedBufferWidth * 4);
-            }
-
-            image->initWithRawData(buffer, savedBufferWidth * savedBufferHeight * 4, savedBufferWidth, savedBufferHeight, 8);
-        }
-        else
-        {
-            image->initWithRawData(tempData, savedBufferWidth * savedBufferHeight * 4, savedBufferWidth, savedBufferHeight, 8);
-        }
-        
-    } while (0);
-
-    CC_SAFE_DELETE_ARRAY(buffer);
-    CC_SAFE_DELETE_ARRAY(tempData);
-
+    Image *image = new (std::nothrow) Image();
+    image->initWithRawData(buffer, dataLen, savedBufferWidth, savedBufferHeight, 8);
     return image;
 }
 
 void RenderTexture::onBegin()
 {
-    //
     Director *director = Director::getInstance();
+    director->getOpenGLView()->setRenderTextureMode(true);
     
     _oldProjMatrix = director->getMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
     director->loadMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION, _projectionMatrix);
@@ -551,7 +529,6 @@ void RenderTexture::onBegin()
     if(!_keepMatrix)
     {
         director->setProjection(director->getProjection());
-
         const Size& texSize = _texture->getContentSizeInPixels();
         
         // Calculate the adjustment ratios based on the old and new projections
@@ -582,8 +559,8 @@ void RenderTexture::onBegin()
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_oldFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, _FBO);
 
-    // TODO: move this to configration, so we don't check it every time
-    /*  Certain Qualcomm Andreno gpu's will retain data in memory after a frame buffer switch which corrupts the render to the texture. The solution is to clear the frame buffer before rendering to the texture. However, calling glClear has the unintended result of clearing the current texture. Create a temporary texture to overcome this. At the end of RenderTexture::begin(), switch the attached texture to the second one, call glClear, and then switch back to the original texture. This solution is unnecessary for other devices as they don't have the same issue with switching frame buffers.
+    // TODO: move this to configuration, so we don't check it every time
+    /*  Certain Qualcomm Adreno GPU's will retain data in memory after a frame buffer switch which corrupts the render to the texture. The solution is to clear the frame buffer before rendering to the texture. However, calling glClear has the unintended result of clearing the current texture. Create a temporary texture to overcome this. At the end of RenderTexture::begin(), switch the attached texture to the second one, call glClear, and then switch back to the original texture. This solution is unnecessary for other devices as they don't have the same issue with switching frame buffers.
      */
     if (Configuration::getInstance()->checkForGLExtension("GL_QCOM"))
     {
@@ -598,6 +575,7 @@ void RenderTexture::onBegin()
 void RenderTexture::onEnd()
 {
     Director *director = Director::getInstance();
+    director->getOpenGLView()->setRenderTextureMode(false);
 
     glBindFramebuffer(GL_FRAMEBUFFER, _oldFBO);
 
@@ -606,7 +584,6 @@ void RenderTexture::onEnd()
     //
     director->loadMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION, _oldProjMatrix);
     director->loadMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW, _oldTransMatrix);
-
 }
 
 void RenderTexture::onClear()
@@ -615,6 +592,7 @@ void RenderTexture::onClear()
     GLfloat oldClearColor[4] = {0.0f};
     GLfloat oldDepthClearValue = 0.0f;
     GLint oldStencilClearValue = 0;
+    GLboolean oldDepthWrite = GL_FALSE;
 
     // backup and set
     if (_clearFlags & GL_COLOR_BUFFER_BIT)
@@ -627,6 +605,9 @@ void RenderTexture::onClear()
     {
         glGetFloatv(GL_DEPTH_CLEAR_VALUE, &oldDepthClearValue);
         glClearDepth(_clearDepth);
+
+        glGetBooleanv(GL_DEPTH_WRITEMASK, &oldDepthWrite);
+        glDepthMask(GL_TRUE);
     }
 
     if (_clearFlags & GL_STENCIL_BUFFER_BIT)
@@ -646,6 +627,7 @@ void RenderTexture::onClear()
     if (_clearFlags & GL_DEPTH_BUFFER_BIT)
     {
         glClearDepth(oldDepthClearValue);
+        glDepthMask(oldDepthWrite);
     }
     if (_clearFlags & GL_STENCIL_BUFFER_BIT)
     {
@@ -695,7 +677,7 @@ void RenderTexture::draw(Renderer *renderer, const Mat4 &transform, uint32_t fla
 void RenderTexture::begin()
 {
     Director* director = Director::getInstance();
-    CCASSERT(nullptr != director, "Director is null when seting matrix stack");
+    CCASSERT(nullptr != director, "Director is null when setting matrix stack");
     
     director->pushMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
     _projectionMatrix = director->getMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
@@ -738,15 +720,15 @@ void RenderTexture::end()
     _endCommand.func = CC_CALLBACK_0(RenderTexture::onEnd, this);
 
     Director* director = Director::getInstance();
-    CCASSERT(nullptr != director, "Director is null when seting matrix stack");
+    CCASSERT(nullptr != director, "Director is null when setting matrix stack");
     
     Renderer *renderer = director->getRenderer();
     renderer->addCommand(&_endCommand);
     renderer->popGroup();
+    renderer->render();
     
     director->popMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
     director->popMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
-
 }
 
 NS_CC_END

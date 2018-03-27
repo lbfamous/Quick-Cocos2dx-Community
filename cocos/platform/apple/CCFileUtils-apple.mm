@@ -31,8 +31,7 @@ THE SOFTWARE.
 #include <stack>
 
 #include "base/CCDirector.h"
-#include "deprecated/CCString.h"
-#include "deprecated/CCDictionary.h"
+#include "base/ccUTF8.h"
 #include "platform/CCFileUtils.h"
 #include "platform/CCSAXParser.h"
 
@@ -321,7 +320,7 @@ void FileUtilsApple::checkFilePathWithCaseSensitive(const std::string& filePath)
     
     if ([[realFilePathName lastPathComponent] compare:[filePathName lastPathComponent]] != NSOrderedSame)
     {
-        CCLOG("WARNING: File case-sensitive.\n%s\n%s\n\n", filePath.c_str(), [realFilePathName UTF8String]);
+        cocos2d::log("WARNING: File case-sensitive.\n%s\n%s\n\n", filePath.c_str(), [realFilePathName UTF8String]);
     }
 }
 

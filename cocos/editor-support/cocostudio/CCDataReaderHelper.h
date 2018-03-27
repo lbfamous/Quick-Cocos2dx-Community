@@ -89,10 +89,6 @@ protected:
 	} DataInfo;
 
 public:
-
-	/** @deprecated Use getInstance() instead */
-	CC_DEPRECATED_ATTRIBUTE static DataReaderHelper *sharedDataReaderHelper() { return DataReaderHelper::getInstance(); }
-
 	static DataReaderHelper *getInstance();
 
     /**
@@ -203,8 +199,6 @@ protected:
 	std::condition_variable		_sleepCondition;
 
 	std::thread     *_loadingThread;
-
-	std::mutex      _sleepMutex;
 
 	std::mutex      _asyncStructQueueMutex;
 	std::mutex      _dataInfoMutex;

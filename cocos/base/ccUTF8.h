@@ -29,10 +29,25 @@
 #include "platform/CCPlatformMacros.h"
 #include <vector>
 #include <string>
+#include <sstream>
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID) 
+#include "platform/android/jni/JniHelper.h"
+#endif
 
 NS_CC_BEGIN
 
 namespace StringUtils {
+    
+template<typename T>
+std::string toString(T arg)
+{
+	std::stringstream ss;
+	ss << arg;
+	return ss.str();
+}
+
+std::string CC_DLL format(const char* format, ...) CC_FORMAT_PRINTF(1, 2);
 
 /**
  *  @brief Converts utf8 string to utf16 string
@@ -67,6 +82,28 @@ CC_DLL bool UTF8ToUTF16(const std::string& utf8, std::u16string& outUtf16);
  *  @endcode
  */
 CC_DLL bool UTF16ToUTF8(const std::u16string& utf16, std::string& outUtf8);
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+/**
+*  @brief convert jstring to utf8 std::string,  same function with env->getStringUTFChars. 
+*         because getStringUTFChars can not pass special emoticon
+*  @param env   The JNI Env
+*  @param srcjStr The jstring which want to convert
+*  @param ret   True if the conversion succeeds and the ret pointer isn't null
+*  @returns the result of utf8 string
+*/
+CC_DLL std::string getStringUTFCharsJNI(JNIEnv* env, jstring srcjStr, bool* ret = nullptr);
+
+/**
+*  @brief create a jstring with utf8 std::string, same function with env->newStringUTF
+*         because newStringUTF can not convert special emoticon
+*  @param env   The JNI Env
+*  @param srcjStr The std::string which want to convert
+*  @param ret     True if the conversion succeeds and the ret pointer isn't null
+*  @returns the result of jstring,the jstring need to DeleteLocalRef(jstring);
+*/
+CC_DLL jstring newStringUTFJNI(JNIEnv* env, const std::string& utf8Str, bool* ret = nullptr);
+#endif
 
 /**
  *  @brief Trims the unicode spaces at the end of char16_t vector
@@ -121,97 +158,6 @@ CC_DLL unsigned int getIndexOfLastNotChar16(const std::vector<char16_t>& str, ch
 CC_DLL std::vector<char16_t> getChar16VectorFromUTF16String(const std::u16string& utf16);
 
 } // namespace StringUtils {
-
-/**
- * Returns the character count in UTF16 string
- * @param str pointer to the start of a UTF-16 encoded string. It must be an NULL terminal UTF8 string.
- * @deprecated Please use c++11 `std::u16string::length` instead, don't use `unsigned short*` directly
- */
-CC_DEPRECATED_ATTRIBUTE CC_DLL int cc_wcslen(const unsigned short* str);
-
-/** Trims the space characters at the end of UTF8 string 
- *  @deprecated Please use `StringUtils::trimUTF16Vector` instead
- */
-
-CC_DEPRECATED_ATTRIBUTE CC_DLL void cc_utf8_trim_ws(std::vector<unsigned short>* str);
-
-/**
- * Whether the character is a whitespace character.
- *
- * @param ch    the unicode character
- * @returns     whether the character is a white space character.
- * @deprecated Please use `StringUtils::isUnicodeSpace` instead
- *
- * @see http://en.wikipedia.org/wiki/Whitespace_character#Unicode
- * */
-CC_DEPRECATED_ATTRIBUTE CC_DLL bool isspace_unicode(unsigned short ch);
-
-/**
- * Whether the character is a Chinese/Japanese/Korean character.
- *
- * @param ch    the unicode character
- * @returns     whether the character is a Chinese character.
- * @deprecated Please use `StringUtils::isCJKUnicode` instead
- *
- * @see http://www.searchtb.com/2012/04/chinese_encode.html
- * @see http://tieba.baidu.com/p/748765987
- * */
-CC_DEPRECATED_ATTRIBUTE CC_DLL bool iscjk_unicode(unsigned short ch);
-
-/**
- * Returns the length of the string in characters.
- *
- * @param p pointer to the start of a UTF-8 encoded string. It must be an NULL terminal UTF8 string.
- * @param max Not used from 3.1, just keep it for backward compatibility
- * @deprecated Please use `StringUtils::getCharacterCountInUTF8String` instead
- * @returns the length of the string in characters
- **/
-CC_DEPRECATED_ATTRIBUTE CC_DLL long cc_utf8_strlen (const char * p, int max = -1);
-
-/**
- * Find the last character that is not equal to the character given.
- *
- * @param str   the string to be searched.
- * @param c     the character to be searched for.
- * @deprecated Please use `StringUtils::getIndexOfLastNotChar16` instead
- * @returns the index of the last character that is not \p c.
- * */
-CC_DEPRECATED_ATTRIBUTE CC_DLL unsigned int cc_utf8_find_last_not_char(const std::vector<unsigned short>& str, unsigned short c);
-
-/**
- *  @brief Gets `unsigned short` vector from a given utf16 string
- *  @deprecated Please use `StringUtils::getChar16VectorFromUTF16String` instead
- */
-CC_DEPRECATED_ATTRIBUTE CC_DLL std::vector<unsigned short> cc_utf16_vec_from_utf16_str(const unsigned short* str);
-
-/**
- * Creates an utf8 string from a c string. The result will be null terminated.
- *
- * @param str_old pointer to the start of a C string. It must be an NULL terminal UTF8 string.
- * @param length  not used from 3.1, keep it just for backward compatibility
- * @param rUtf16Size The character count in the return UTF16 string.
- * @deprecated Please use `StringUtils::UTF8ToUTF16` instead
- * @returns the newly created utf16 string, it must be released with `delete[]`,
- *          If an error occurs, %NULL will be returned.
- * */
-CC_DEPRECATED_ATTRIBUTE CC_DLL unsigned short* cc_utf8_to_utf16(const char* str_old, int length = -1, int* rUtf16Size = nullptr);
-
-/**
- * Converts a string from UTF-16 to UTF-8. The result will be null terminated.
- *
- * @param utf16 an UTF-16 encoded string, It must be an NULL terminal UTF16 string.
- * @param len not used from 3.1, keep it just for backward compatibility
- * @param items_read     not used from 3.1, keep it just for backward compatibility
- * @param items_written  not used from 3.1, keep it just for backward compatibility
- * @deprecated Please use `StringUtils::UTF16ToUTF8` instead
- * @returns a pointer to a newly allocated UTF-8 string. This value must be
- *          released with `delete[]`. If an error occurs, %NULL will be returned.
- **/
-CC_DEPRECATED_ATTRIBUTE CC_DLL char * cc_utf16_to_utf8 (const unsigned short  *str,
-                  int             len = -1,
-                  long            *items_read = nullptr,
-                  long            *items_written = nullptr);
-
 
 NS_CC_END
 

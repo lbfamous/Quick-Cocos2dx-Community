@@ -37,7 +37,6 @@
 #include "WidgetReader/SpriteReader/SpriteReader.h"
 #include "WidgetReader/ParticleReader/ParticleReader.h"
 #include "WidgetReader/GameMapReader/GameMapReader.h"
-#include "WidgetReader/ComAudioReader/ComAudioReader.h"
 #include "WidgetReader/ProjectNodeReader/ProjectNodeReader.h"
 
 #include "WidgetReader/ButtonReader/ButtonReader.h"
@@ -149,8 +148,7 @@ std::string FlatBuffersSerialize::serializeFlatBuffersWithXMLFile(const std::str
         return ".csd file doesn not exists ";
     }
     
-    ssize_t size;
-    std::string content =(char*)FileUtils::getInstance()->getFileData(inFullpath, "r", &size);
+    std::string content = FileUtils::getInstance()->getStringFromFile(inFullpath);
     
     // xml parse
     tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();
@@ -290,11 +288,6 @@ Offset<NodeTree> FlatBuffersSerialize::createNodeTree(const tinyxml2::XMLElement
     if (classname == "ProjectNode")
     {
         auto reader = ProjectNodeReader::getInstance();
-        options = CreateOptions(*_builder, reader->createOptionsWithFlatBuffers(objectData, _builder));
-    }
-    else if (classname == "SimpleAudio")
-    {
-        auto reader = ComAudioReader::getInstance();
         options = CreateOptions(*_builder, reader->createOptionsWithFlatBuffers(objectData, _builder));
     }
     else
@@ -970,8 +963,7 @@ FlatBufferBuilder* FlatBuffersSerialize::createFlatBuffersWithXMLFileForSimulato
 //        CCLOG(".csd file doesn not exists ");
     }
     
-    ssize_t size;
-    std::string content =(char*)FileUtils::getInstance()->getFileData(inFullpath, "r", &size);
+    std::string content = FileUtils::getInstance()->getStringFromFile(inFullpath);
     
     // xml parse
     tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();
@@ -1073,11 +1065,6 @@ Offset<NodeTree> FlatBuffersSerialize::createNodeTreeForSimulator(const tinyxml2
     {
         auto projectNodeOptions = createProjectNodeOptionsForSimulator(objectData);
         options = CreateOptions(*_builder, *(Offset<Table>*)(&projectNodeOptions));
-    }
-    else if (classname == "SimpleAudio")
-    {
-        auto reader = ComAudioReader::getInstance();
-        options = CreateOptions(*_builder, reader->createOptionsWithFlatBuffers(objectData, _builder));
     }
     else
     {

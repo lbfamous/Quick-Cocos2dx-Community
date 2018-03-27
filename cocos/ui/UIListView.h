@@ -32,15 +32,6 @@ THE SOFTWARE.
 NS_CC_BEGIN
 
 namespace ui{
-    
-typedef enum
-{
-    LISTVIEW_ONSELECTEDITEM_START,
-    LISTVIEW_ONSELECTEDITEM_END
-}ListViewEventType;
-
-typedef void (Ref::*SEL_ListViewEvent)(Ref*,ListViewEventType);
-#define listvieweventselector(_SELECTOR) (SEL_ListViewEvent)(&_SELECTOR)
 
 class CC_GUI_DLL ListView : public ScrollView
 {
@@ -174,7 +165,6 @@ public:
     
     ssize_t getCurSelectedIndex() const;
     
-    CC_DEPRECATED_ATTRIBUTE void addEventListenerListView(Ref* target, SEL_ListViewEvent selector);
     void addEventListener(const ccListViewCallback& callback);
     using ScrollView::addEventListener;
 
@@ -197,6 +187,9 @@ CC_CONSTRUCTOR_ACCESS:
     
 protected:
     
+    void onTouchMoved(Touch *touch, Event *event) override;
+    void onTouchEnded(Touch *touch, Event *event) override;
+
     void updateInnerContainerSize();
     void remedyLayoutParameter(Widget* item);
     virtual void onSizeChanged() override;
@@ -209,7 +202,7 @@ protected:
     Widget* _model;
     
     Vector<Widget*> _items;
-    
+    Direction _curSlideDir;
     Gravity _gravity;
     
     float _itemsMargin;
@@ -217,19 +210,6 @@ protected:
     ssize_t _curSelectedIndex;
     bool _refreshViewDirty;
     
-    Ref*       _listViewEventListener;
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif _MSC_VER >= 1400 //vs 2005 or higher
-#pragma warning (push)
-#pragma warning (disable: 4996)
-#endif
-    SEL_ListViewEvent    _listViewEventSelector;
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-#pragma GCC diagnostic warning "-Wdeprecated-declarations"
-#elif _MSC_VER >= 1400 //vs 2005 or higher
-#pragma warning (pop)
-#endif
     ccListViewCallback _eventCallback;
 };
 

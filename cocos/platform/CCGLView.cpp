@@ -102,17 +102,13 @@ GLView::GLView()
 : _scaleX(1.0f)
 , _scaleY(1.0f)
 , _resolutionPolicy(ResolutionPolicy::UNKNOWN)
+, _isRenderTextureMode(false)
 {
 }
 
 GLView::~GLView()
 {
 
-}
-
-void GLView::pollInputEvents()
-{
-    pollEvents();
 }
 
 void GLView::pollEvents()
@@ -234,6 +230,10 @@ void GLView::setViewPortInPoints(float x , float y , float w , float h)
 
 void GLView::setScissorInPoints(float x , float y , float w , float h)
 {
+    if (_isRenderTextureMode) {
+        glScissor(x, y, w, h);
+        return;
+    }
     glScissor((GLint)(x * _scaleX + _viewPortRect.origin.x),
               (GLint)(y * _scaleY + _viewPortRect.origin.y),
               (GLsizei)(w * _scaleX),
@@ -247,13 +247,18 @@ bool GLView::isScissorEnabled()
 
 Rect GLView::getScissorRect() const
 {
-	GLfloat params[4];
-	glGetFloatv(GL_SCISSOR_BOX, params);
-	float x = (params[0] - _viewPortRect.origin.x) / _scaleX;
-	float y = (params[1] - _viewPortRect.origin.y) / _scaleY;
-	float w = params[2] / _scaleX;
-	float h = params[3] / _scaleY;
-	return Rect(x, y, w, h);
+    GLfloat params[4];
+    glGetFloatv(GL_SCISSOR_BOX, params);
+    
+    if (_isRenderTextureMode) {
+        return Rect(params[0], params[1], params[2], params[3]);
+    }
+
+    float x = (params[0] - _viewPortRect.origin.x) / _scaleX;
+    float y = (params[1] - _viewPortRect.origin.y) / _scaleY;
+    float w = params[2] / _scaleX;
+    float h = params[3] / _scaleY;
+    return Rect(x, y, w, h);
 }
 
 void GLView::setViewName(const std::string& viewname )

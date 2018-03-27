@@ -27,6 +27,7 @@
 #include "2d/CCSpriteFrameCache.h"
 #include "base/CCVector.h"
 #include "base/CCDirector.h"
+#include "base/ccUTF8.h"
 
 NS_CC_BEGIN
 namespace ui {
@@ -144,29 +145,11 @@ namespace ui {
         return true;
     }
     
-    bool Scale9Sprite::initWithBatchNode(cocos2d::SpriteBatchNode *batchnode, const cocos2d::Rect &rect, bool rotated, const cocos2d::Rect &capInsets)
-    {
-        Sprite *sprite = Sprite::createWithTexture(batchnode->getTexture());
-        return init(sprite, rect, rotated, capInsets);
-    }
-    
-    bool Scale9Sprite::initWithBatchNode(cocos2d::SpriteBatchNode *batchnode, const cocos2d::Rect &rect, const cocos2d::Rect &capInsets)
-    {
-        auto sprite = Sprite::createWithTexture(batchnode->getTexture());
-        return init(sprite, rect, false, capInsets);
-    }
-    
 #define    TRANSLATE_X(x, y, xtranslate) \
 x+=xtranslate;                       \
 
 #define    TRANSLATE_Y(x, y, ytranslate) \
 y+=ytranslate;         \
-
-    bool Scale9Sprite::updateWithBatchNode(cocos2d::SpriteBatchNode *batchnode, const cocos2d::Rect &originalRect, bool rotated, const cocos2d::Rect &capInsets)
-    {
-        Sprite *sprite = Sprite::createWithTexture(batchnode->getTexture());
-        return this->updateWithSprite(sprite, originalRect, rotated, Vec2::ZERO, originalRect.size, capInsets);
-    }
     
     bool Scale9Sprite::updateWithSprite(Sprite* sprite, const Rect& rect, bool rotated, const Rect& capInsets)
     {
@@ -739,7 +722,7 @@ y+=ytranslate;         \
         CCASSERT((SpriteFrameCache::getInstance()) != NULL, "SpriteFrameCache::getInstance() must be non-NULL");
         
         SpriteFrame *frame = SpriteFrameCache::getInstance()->getSpriteFrameByName(spriteFrameName);
-        CCASSERT(frame != NULL, "CCSpriteFrame must be non-NULL");
+        CCASSERT(frame != NULL, StringUtils::format("Scale9Sprite Can't load Frame:%s", spriteFrameName.c_str()).c_str());
         
         if (NULL == frame) return false;
         
@@ -912,7 +895,7 @@ y+=ytranslate;         \
         //
         // draw children and protectedChildren zOrder < 0
         //
-        for( ; i < _children.size(); i++ )
+        for(auto size = _children.size(); i < size; i++)
         {
             auto node = _children.at(i);
             
@@ -924,7 +907,7 @@ y+=ytranslate;         \
         
         if (_scale9Enabled)
         {
-            for( ; j < _protectedChildren.size(); j++ )
+            for(auto size = _protectedChildren.size(); j < size; j++ )
             {
                 auto node = _protectedChildren.at(j);
                 
@@ -965,7 +948,7 @@ y+=ytranslate;         \
         }
         
         
-        for(auto it=_children.cbegin()+i; it != _children.cend(); ++it)
+        for(auto it=_children.cbegin()+i, itCend = _children.cend(); it != itCend; ++it)
             (*it)->visit(renderer, _modelViewTransform, flags);
         
         // FIX ME: Why need to set _orderOfArrival to 0??
@@ -1095,13 +1078,6 @@ y+=ytranslate;         \
     
     void Scale9Sprite::onEnter()
     {
-#if CC_ENABLE_SCRIPT_BINDING
-        if (_scriptType == kScriptTypeJavascript)
-        {
-            if (ScriptEngineManager::sendNodeEventToJSExtended(this, kNodeOnEnter))
-                return;
-        }
-#endif
         Node::onEnter();
         for( const auto &child: _protectedChildren)
             child->onEnter();
@@ -1292,4 +1268,18 @@ y+=ytranslate;         \
         return this->getScaleX();
     }
     
+    void Scale9Sprite::setCameraMask(unsigned short mask, bool applyChildren)
+    {
+        Node::setCameraMask(mask, applyChildren);
+        if (applyChildren)
+        {
+            if (_scale9Image) {
+                _scale9Image->setCameraMask(mask);
+            }
+            for (auto& iter: _protectedChildren)
+            {
+                iter->setCameraMask(mask);
+            }
+        }
+    }
 }}

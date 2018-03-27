@@ -113,12 +113,6 @@ public:
     static GLContextAttrs getGLContextAttrs();
     static GLContextAttrs _glContextAttrs;
 
-    /**
-     * Polls input events. Subclass must implement methods if platform
-     * does not provide event callbacks.
-     */
-    CC_DEPRECATED_ATTRIBUTE virtual void pollInputEvents();
-
     virtual void pollEvents();
 
     /**
@@ -196,6 +190,9 @@ public:
      * Get whether GL_SCISSOR_TEST is enable
      */
     virtual bool isScissorEnabled();
+    
+    void setRenderTextureMode(bool mode) {_isRenderTextureMode = mode;};
+    bool getRenderTextureMode(void) {return _isRenderTextureMode;};
 
     /**
      * Get the current scissor rectangle
@@ -259,6 +256,7 @@ protected:
     float _scaleX;
     float _scaleY;
     ResolutionPolicy _resolutionPolicy;
+    bool _isRenderTextureMode;
 };
 
 // end of platform group

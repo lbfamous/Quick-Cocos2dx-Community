@@ -67,7 +67,6 @@ struct transformValues_;
  *
  *  - The Alias/Antialias property belongs to `SpriteBatchNode`, so you can't individually set the aliased property.
  *  - The Blending function property belongs to `SpriteBatchNode`, so you can't individually set the blending function property.
- *  - `ParallaxNode` is not supported, but can be simulated with a "proxy" sprite.
  *  - Sprites can only have other Sprites (or subclasses of Sprite) as children.
  *
  * The default anchorPoint in Sprite is (0.5, 0.5).
@@ -226,9 +225,6 @@ public:
     virtual void setSpriteFrame(const std::string &spriteFrameName);
     virtual void setSpriteFrame(SpriteFrame* newFrame);
 
-    /** @deprecated Use `setSpriteFrame()` instead. */
-    CC_DEPRECATED_ATTRIBUTE virtual void setDisplayFrame(SpriteFrame *newFrame) { setSpriteFrame(newFrame); }
-
     /**
      * Returns whether or not a SpriteFrame is being displayed
      */
@@ -238,10 +234,6 @@ public:
      * Returns the current displayed frame.
      */
     virtual SpriteFrame* getSpriteFrame() const;
-    /** @deprecated Use `getSpriteFrame()` instead */
-    CC_DEPRECATED_ATTRIBUTE virtual SpriteFrame* getDisplayFrame() const { return getSpriteFrame(); }
-    /** @deprecated Use `getSpriteFrame()` instead */
-    CC_DEPRECATED_ATTRIBUTE virtual SpriteFrame* displayFrame() const { return getSpriteFrame(); };
 
     /// @} End of frames methods
 
@@ -333,14 +325,6 @@ public:
      */
     void setFlippedX(bool flippedX);
 
-    /** @deprecated Use isFlippedX() instead
-    * @js NA
-    * @lua NA
-    */
-    CC_DEPRECATED_ATTRIBUTE bool isFlipX() { return isFlippedX(); };
-    /** @deprecated Use setFlippedX() instead */
-    CC_DEPRECATED_ATTRIBUTE void setFlipX(bool flippedX) { setFlippedX(flippedX); };
-
     /**
      * Return the flag which indicates whether the sprite is flipped vertically or not.
      *
@@ -360,11 +344,6 @@ public:
     void setFlippedY(bool flippedY);
 
     /// @} End of Sprite properties getter/setters
-
-    /** @deprecated Use isFlippedY() instead */
-    CC_DEPRECATED_ATTRIBUTE bool isFlipY() { return isFlippedY(); };
-    /** @deprecated Use setFlippedY() instead */
-    CC_DEPRECATED_ATTRIBUTE void setFlipY(bool flippedY) { setFlippedY(flippedY); };
 
     //
     // Overrides

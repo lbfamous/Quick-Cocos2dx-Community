@@ -42,15 +42,12 @@ typedef struct lua_State lua_State;
 NS_CC_BEGIN
 
 class TimerScriptHandler;
-class Layer;
-class MenuItem;
 class CallFunc;
 class Acceleration;
 
 enum ccScriptType {
     kScriptTypeNone = 0,
     kScriptTypeLua,
-    kScriptTypeJavascript
 };
 
 class ScriptHandlerEntry : public Ref
@@ -202,16 +199,9 @@ private:
 enum ScriptEventType
 {
     kNodeEvent = 0,
-    kMenuClickedEvent,
     kCallFuncEvent,
     kScheduleEvent,
-    kTouchEvent,
-    kTouchesEvent,
-    kKeypadEvent,
-    kAccelerometerEvent,
-    kControlEvent,
     kCommonEvent,
-    kComponentEvent
 };
 
 struct BasicScriptData
@@ -390,8 +380,6 @@ public:
      * @lua NA
      */
     virtual void removeScriptHandler(int handler) {};
-
-    virtual void removeTouchNodeEvent(Node *node) {};
     
     /** Reallocate script function handler, only LuaEngine class need to implement this function. 
      * @js NA
@@ -497,27 +485,7 @@ public:
      * @js NA
      * @lua NA
      */
-    static bool sendNodeEventToJS(Node* node, int action);
-    /**
-     * @js NA
-     * @lua NA
-     */
-    static bool sendNodeEventToJSExtended(Node* node, int action);
-    /**
-     * @js NA
-     * @lua NA
-     */
     static void sendNodeEventToLua(Node* node, int action);
-    /**
-     * @js NA
-     * @lua NA
-     */
-    CC_DEPRECATED_ATTRIBUTE static ScriptEngineManager* sharedManager() { return ScriptEngineManager::getInstance(); };
-    /**
-     * @js NA
-     * @lua NA
-     */
-    CC_DEPRECATED_ATTRIBUTE static void purgeSharedManager() { ScriptEngineManager::destroyInstance(); };
     
 private:
     ScriptEngineManager(void)

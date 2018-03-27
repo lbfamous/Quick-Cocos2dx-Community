@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -20,20 +20,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '10.0'">v100</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0'">v110</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0' and exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A')">v110_xp</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0'">v120</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0' and exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A')">v120_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '10.0'">v100</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0'">v110</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0' and exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A')">v110_xp</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0'">v120</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0' and exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A')">v120_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -77,8 +69,8 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\include;$(EngineRoot)external\box2d;$(EngineRoot)external\sqlite3\include;$(EngineRoot)external\unzip;$(EngineRoot)external\edtaa3func;$(EngineRoot)external\tinyxml2;$(EngineRoot)external\png\include\win32;$(EngineRoot)external\jpeg\include\win32;$(EngineRoot)external\tiff\include\win32;$(EngineRoot)external\webp\include\win32;$(EngineRoot)external\freetype2\include\win32\freetype2;$(EngineRoot)external\win32-specific\OpenalSoft\include;$(EngineRoot)external\win32-specific\MP3Decoder\include;$(EngineRoot)external\win32-specific\OggDecoder\include;$(EngineRoot)external\win32-specific\icon\include;$(EngineRoot)external\win32-specific\zlib\include;$(EngineRoot)external\chipmunk\include\chipmunk;$(EngineRoot)external\xxhash;$(EngineRoot)external\ConvertUTF;$(EngineRoot)external\curl\include\win32;$(EngineRoot)external\websockets\include\win32;$(EngineRoot)external;$(EngineRoot)cocos;$(EngineRoot)cocos\editor-support;$(EngineRoot)cocos\audio\include;$(EngineRoot)extensions;$(EngineRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_USRDLL;_DEBUG;_WINDOWS;_LIB;COCOS2DXWIN32_EXPORTS;GL_GLEXT_PROTOTYPES;COCOS2D_DEBUG=1;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_USE3DDLL;_EXPORT_DLL_;_USRSTUDIODLL;_USREXDLL;_USEGUIDLL;CC_ENABLE_CHIPMUNK_INTEGRATION=1;PROTOBUF_USE_DLLS;LIBPROTOBUF_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(EngineRoot)external\box2d;$(EngineRoot)external\sqlite3\include;$(EngineRoot)external\unzip;$(EngineRoot)external\edtaa3func;$(EngineRoot)external\tinyxml2;$(EngineRoot)external\png\include\win32;$(EngineRoot)external\jpeg\include\win32;$(EngineRoot)external\tiff\include\win32;$(EngineRoot)external\webp\include\win32;$(EngineRoot)external\freetype2\include\win32\freetype2;$(EngineRoot)external\win32-specific\icon\include;$(EngineRoot)external\win32-specific\zlib\include;$(EngineRoot)external\chipmunk\include\chipmunk;$(EngineRoot)external\xxhash;$(EngineRoot)external\ConvertUTF;$(EngineRoot)external\curl\include\win32;$(EngineRoot)external\websockets\include\win32;$(EngineRoot)external\OpenAL\inc;$(EngineRoot)external;$(EngineRoot)cocos;$(EngineRoot)cocos\editor-support;$(EngineRoot)cocos\audio\libogg;$(EngineRoot)cocos\audio\libvorbis;$(EngineRoot)cocos\audio;$(EngineRoot)extensions;$(EngineRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_USRDLL;_DEBUG;_WINDOWS;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_USE3DDLL;_EXPORT_DLL_;_USRSTUDIODLL;_USREXDLL;_USEGUIDLL;COCOS2D_DEBUG=1;CC_ENABLE_CHIPMUNK_INTEGRATION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -100,12 +92,10 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\png\prebuilt\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\tiff\prebuilt\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\webp\prebuilt\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\websockets\prebuilt\win32\*.*" "$(OutDir)"
+xcopy /Y /Q "$(ProjectDir)..\..\external\OpenAL\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\zlib\prebuilt\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\icon\prebuilt\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\gles\prebuilt\*.*" "$(OutDir)"
-xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\OpenalSoft\prebuilt\*.*" "$(OutDir)"
-xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\MP3Decoder\prebuilt\*.*" "$(OutDir)"
-xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\OggDecoder\prebuilt\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\sqlite3\libraries\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)"</Command>
     </PreLinkEvent>
@@ -119,7 +109,7 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
       <ImportLibrary>$(TargetDir)$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>cocos2d.def</ModuleDefinitionFile>
-      <AdditionalDependencies>sqlite3.lib;libcurl.lib;websockets.lib;libmpg123.lib;libogg.lib;libvorbis.lib;libvorbisfile.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sqlite3.lib;libcurl.lib;websockets.lib;OpenAL32.lib;common.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -132,8 +122,8 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
       </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\include;$(EngineRoot)external\sqlite3\include;$(EngineRoot)external\unzip;$(EngineRoot)external\edtaa3func;$(EngineRoot)external\tinyxml2;$(EngineRoot)external\png\include\win32;$(EngineRoot)external\jpeg\include\win32;$(EngineRoot)external\tiff\include\win32;$(EngineRoot)external\webp\include\win32;$(EngineRoot)external\freetype2\include\win32\freetype2;$(EngineRoot)external\win32-specific\MP3Decoder\include;$(EngineRoot)external\win32-specific\OggDecoder\include;$(EngineRoot)external\win32-specific\OpenalSoft\include;$(EngineRoot)external\win32-specific\icon\include;$(EngineRoot)external\win32-specific\zlib\include;$(EngineRoot)external\chipmunk\include\chipmunk;$(EngineRoot)external\xxhash;$(EngineRoot)external\ConvertUTF;$(EngineRoot)external\Box2d;$(EngineRoot)external\curl\include\win32;$(EngineRoot)external\websockets\include\win32\;$(EngineRoot)external;$(EngineRoot)cocos;$(EngineRoot)cocos\editor-support;$(EngineRoot)cocos\audio\include;$(EngineRoot)extensions;$(EngineRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_USRDLL;NDEBUG;_WINDOWS;_LIB;COCOS2DXWIN32_EXPORTS;GL_GLEXT_PROTOTYPES;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_USE3DDLL;_EXPORT_DLL_;_USRSTUDIODLL;_USREXDLL;_USEGUIDLL;CC_ENABLE_CHIPMUNK_INTEGRATION=1;PROTOBUF_USE_DLLS;LIBPROTOBUF_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(EngineRoot)external\sqlite3\include;$(EngineRoot)external\unzip;$(EngineRoot)external\edtaa3func;$(EngineRoot)external\tinyxml2;$(EngineRoot)external\png\include\win32;$(EngineRoot)external\jpeg\include\win32;$(EngineRoot)external\tiff\include\win32;$(EngineRoot)external\webp\include\win32;$(EngineRoot)external\freetype2\include\win32\freetype2;$(EngineRoot)external\win32-specific\icon\include;$(EngineRoot)external\win32-specific\zlib\include;$(EngineRoot)external\chipmunk\include\chipmunk;$(EngineRoot)external\xxhash;$(EngineRoot)external\ConvertUTF;$(EngineRoot)external\Box2d;$(EngineRoot)external\curl\include\win32;$(EngineRoot)external\OpenAL\inc;$(EngineRoot)external\websockets\include\win32\;$(EngineRoot)external;$(EngineRoot)cocos;$(EngineRoot)cocos\editor-support;$(EngineRoot)cocos\audio\libogg;$(EngineRoot)cocos\audio\libvorbis;$(EngineRoot)cocos\audio;$(EngineRoot)extensions;$(EngineRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_USRDLL;NDEBUG;_WINDOWS;_LIB;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_USE3DDLL;_EXPORT_DLL_;_USRSTUDIODLL;_USREXDLL;_USEGUIDLL;CC_ENABLE_CHIPMUNK_INTEGRATION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -156,18 +146,16 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\png\prebuilt\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\tiff\prebuilt\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\webp\prebuilt\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\websockets\prebuilt\win32\*.*" "$(OutDir)"
+xcopy /Y /Q "$(ProjectDir)..\..\external\OpenAL\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\zlib\prebuilt\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\icon\prebuilt\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\gles\prebuilt\*.*" "$(OutDir)"
-xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\OpenalSoft\prebuilt\*.*" "$(OutDir)"
-xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\MP3Decoder\prebuilt\*.*" "$(OutDir)"
-xcopy /Y /Q "$(ProjectDir)..\..\external\win32-specific\OggDecoder\prebuilt\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\sqlite3\libraries\win32\*.*" "$(OutDir)"
 xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)"
 </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>sqlite3.lib;libcurl.lib;websockets.lib;libmpg123.lib;libogg.lib;libvorbis.lib;libvorbisfile.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sqlite3.lib;libcurl.lib;websockets.lib;OpenAL32.lib;common.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -185,28 +173,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\extensions\assets-manager\AssetsManager.cpp" />
-    <ClCompile Include="..\..\extensions\assets-manager\AssetsManagerEx.cpp" />
-    <ClCompile Include="..\..\extensions\assets-manager\CCEventAssetsManagerEx.cpp" />
-    <ClCompile Include="..\..\extensions\assets-manager\CCEventListenerAssetsManagerEx.cpp" />
-    <ClCompile Include="..\..\extensions\assets-manager\Downloader.cpp" />
-    <ClCompile Include="..\..\extensions\assets-manager\Manifest.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControl.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlButton.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlColourPicker.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlHuePicker.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlPotentiometer.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlSaturationBrightnessPicker.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlSlider.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlStepper.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlSwitch.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCControlUtils.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCControlExtension\CCInvocation.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCScrollView\CCScrollView.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCScrollView\CCTableView.cpp" />
-    <ClCompile Include="..\..\extensions\GUI\CCScrollView\CCTableViewCell.cpp" />
-    <ClCompile Include="..\..\extensions\physics-nodes\CCPhysicsDebugNode.cpp" />
-    <ClCompile Include="..\..\extensions\physics-nodes\CCPhysicsSprite.cpp" />
     <ClCompile Include="..\..\external\ConvertUTF\ConvertUTF.c" />
     <ClCompile Include="..\..\external\ConvertUTF\ConvertUTFWrapper.cpp" />
     <ClCompile Include="..\..\external\edtaa3func\edtaa3func.cpp" />
@@ -239,12 +205,200 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="..\3d\CCSkeleton3D.cpp" />
     <ClCompile Include="..\3d\CCSprite3D.cpp" />
     <ClCompile Include="..\3d\CCSprite3DMaterial.cpp" />
-    <ClCompile Include="..\audio\AudioEngine.cpp" />
-    <ClCompile Include="..\audio\win32\AudioCache.cpp" />
-    <ClCompile Include="..\audio\win32\AudioEngine-win32.cpp" />
-    <ClCompile Include="..\audio\win32\AudioPlayer.cpp" />
-    <ClCompile Include="..\audio\win32\MciPlayer.cpp" />
-    <ClCompile Include="..\audio\win32\SimpleAudioEngine.cpp" />
+    <ClCompile Include="..\audio\libogg\src\bitwise.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libogg\src\framing.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\analysis.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\bitrate.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\block.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\codebook.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\envelope.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\floor0.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\floor1.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\info.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\lookup.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\lpc.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\lsp.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\mapping0.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\mdct.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\psy.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\registry.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\res0.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\sharedbook.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\smallft.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\synthesis.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\vorbisenc.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\vorbisfile.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\libvorbis\lib\window.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="..\audio\RDAudio.cpp" />
+    <ClCompile Include="..\audio\RDAudioOgg.cpp" />
     <ClCompile Include="..\base\atitc.cpp" />
     <ClCompile Include="..\base\base64.cpp" />
     <ClCompile Include="..\base\CCAutoreleasePool.cpp" />
@@ -252,7 +406,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="..\base\CCConfiguration.cpp" />
     <ClCompile Include="..\base\CCConsole.cpp" />
     <ClCompile Include="..\base\CCData.cpp" />
-    <ClCompile Include="..\base\CCDataVisitor.cpp" />
     <ClCompile Include="..\base\CCDirector.cpp" />
     <ClCompile Include="..\base\CCEvent.cpp" />
     <ClCompile Include="..\base\CCEventAcceleration.cpp" />
@@ -290,38 +443,9 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="..\base\TGAlib.cpp" />
     <ClCompile Include="..\base\ZipUtils.cpp" />
     <ClCompile Include="..\cocos2d.cpp" />
-    <ClCompile Include="..\deprecated\CCArray.cpp" />
-    <ClCompile Include="..\deprecated\CCDeprecated.cpp" />
-    <ClCompile Include="..\deprecated\CCDictionary.cpp" />
-    <ClCompile Include="..\deprecated\CCNotificationCenter.cpp" />
-    <ClCompile Include="..\deprecated\CCSet.cpp" />
-    <ClCompile Include="..\deprecated\CCString.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCBAnimationManager.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCBFileLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCBKeyframe.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCBReader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCBSequence.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCBSequenceProperty.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCControlButtonLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCControlLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCLabelBMFontLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCLabelTTFLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCLayerColorLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCLayerGradientLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCLayerLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCMenuItemImageLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCMenuItemLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCNode+CCBRelativePositioning.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCNodeLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCNodeLoaderLibrary.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCParticleSystemQuadLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCScale9SpriteLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCScrollViewLoader.cpp" />
-    <ClCompile Include="..\editor-support\cocosbuilder\CCSpriteLoader.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\ActionTimeline\CCActionTimeline.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\ActionTimeline\CCActionTimelineCache.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\ActionTimeline\CCFrame.cpp" />
-    <ClCompile Include="..\editor-support\cocostudio\ActionTimeline\CCNodeReader.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\ActionTimeline\CCTimeLine.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\ActionTimeline\CSLoader.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\CCActionFrame.cpp" />
@@ -337,7 +461,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="..\editor-support\cocostudio\CCBone.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\CCColliderDetector.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\CCComAttribute.cpp" />
-    <ClCompile Include="..\editor-support\cocostudio\CCComAudio.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\CCComController.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\CCComRender.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\CCDataReaderHelper.cpp" />
@@ -363,7 +486,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="..\editor-support\cocostudio\WidgetCallBackHandlerProtocol.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\WidgetReader\ButtonReader\ButtonReader.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\WidgetReader\CheckBoxReader\CheckBoxReader.cpp" />
-    <ClCompile Include="..\editor-support\cocostudio\WidgetReader\ComAudioReader\ComAudioReader.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\WidgetReader\GameMapReader\GameMapReader.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\WidgetReader\ImageViewReader\ImageViewReader.cpp" />
     <ClCompile Include="..\editor-support\cocostudio\WidgetReader\LayoutReader\LayoutReader.cpp" />
@@ -394,8 +516,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="..\math\Vec2.cpp" />
     <ClCompile Include="..\math\Vec3.cpp" />
     <ClCompile Include="..\math\Vec4.cpp" />
-    <ClCompile Include="..\network\HttpClient.cpp" />
-    <ClCompile Include="..\network\SocketIO.cpp" />
     <ClCompile Include="..\network\WebSocket.cpp" />
     <ClCompile Include="..\physics\CCPhysicsBody.cpp" />
     <ClCompile Include="..\physics\CCPhysicsContact.cpp" />
@@ -443,8 +563,9 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="..\ui\CocosGUI.cpp" />
     <ClCompile Include="..\ui\UIButton.cpp" />
     <ClCompile Include="..\ui\UICheckBox.cpp" />
-    <ClCompile Include="..\ui\UIDeprecated.cpp" />
     <ClCompile Include="..\ui\UIEditBox\UIEditBox.cpp" />
+    <ClCompile Include="..\ui\UIEditBox\UIEditBoxImpl-common.cpp" />
+    <ClCompile Include="..\ui\UIEditBox\UIEditBoxImpl-stub.cpp" />
     <ClCompile Include="..\ui\UIEditBox\UIEditBoxImpl-win32.cpp" />
     <ClCompile Include="..\ui\UIHBox.cpp" />
     <ClCompile Include="..\ui\UIHelper.cpp" />
@@ -489,7 +610,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="CCClippingRectangleNode.cpp" />
     <ClCompile Include="CCComponent.cpp" />
     <ClCompile Include="CCComponentContainer.cpp" />
-    <ClCompile Include="CCDrawingPrimitives.cpp" />
     <ClCompile Include="CCDrawNode.cpp" />
     <ClCompile Include="CCFastTMXLayer.cpp" />
     <ClCompile Include="CCFastTMXTiledMap.cpp" />
@@ -499,22 +619,16 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="CCFontCharMap.cpp" />
     <ClCompile Include="CCFontFNT.cpp" />
     <ClCompile Include="CCFontFreeType.cpp" />
-    <ClCompile Include="CCGLBufferedNode.cpp" />
     <ClCompile Include="CCGrabber.cpp" />
     <ClCompile Include="CCGrid.cpp" />
     <ClCompile Include="CCLabel.cpp" />
     <ClCompile Include="CCLabelAtlas.cpp" />
-    <ClCompile Include="CCLabelBMFont.cpp" />
     <ClCompile Include="CCLabelTextFormatter.cpp" />
-    <ClCompile Include="CCLabelTTF.cpp" />
     <ClCompile Include="CCLayer.cpp" />
     <ClCompile Include="CCLight.cpp" />
-    <ClCompile Include="CCMenu.cpp" />
-    <ClCompile Include="CCMenuItem.cpp" />
     <ClCompile Include="CCMotionStreak.cpp" />
     <ClCompile Include="CCNode.cpp" />
     <ClCompile Include="CCNodeGrid.cpp" />
-    <ClCompile Include="CCParallaxNode.cpp" />
     <ClCompile Include="CCParticleBatchNode.cpp" />
     <ClCompile Include="CCParticleExamples.cpp" />
     <ClCompile Include="CCParticleSystem.cpp" />
@@ -528,7 +642,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="CCSpriteFrame.cpp" />
     <ClCompile Include="CCSpriteFrameCache.cpp" />
     <ClCompile Include="CCTextFieldTTF.cpp" />
-    <ClCompile Include="CCTileMapAtlas.cpp" />
     <ClCompile Include="CCTMXLayer.cpp" />
     <ClCompile Include="CCTMXObjectGroup.cpp" />
     <ClCompile Include="CCTMXTiledMap.cpp" />
@@ -539,32 +652,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClCompile Include="CCTweenFunction.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\extensions\assets-manager\AssetsManager.h" />
-    <ClInclude Include="..\..\extensions\assets-manager\AssetsManagerEx.h" />
-    <ClInclude Include="..\..\extensions\assets-manager\CCEventAssetsManagerEx.h" />
-    <ClInclude Include="..\..\extensions\assets-manager\CCEventListenerAssetsManagerEx.h" />
-    <ClInclude Include="..\..\extensions\assets-manager\Downloader.h" />
-    <ClInclude Include="..\..\extensions\assets-manager\Manifest.h" />
-    <ClInclude Include="..\..\extensions\cocos-ext.h" />
-    <ClInclude Include="..\..\extensions\ExtensionExport.h" />
-    <ClInclude Include="..\..\extensions\ExtensionMacros.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControl.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlButton.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlColourPicker.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlExtensions.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlHuePicker.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlPotentiometer.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlSaturationBrightnessPicker.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlSlider.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlStepper.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlSwitch.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCControlUtils.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCControlExtension\CCInvocation.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCScrollView\CCScrollView.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCScrollView\CCTableView.h" />
-    <ClInclude Include="..\..\extensions\GUI\CCScrollView\CCTableViewCell.h" />
-    <ClInclude Include="..\..\extensions\physics-nodes\CCPhysicsDebugNode.h" />
-    <ClInclude Include="..\..\extensions\physics-nodes\CCPhysicsSprite.h" />
     <ClInclude Include="..\..\external\ConvertUTF\ConvertUTF.h" />
     <ClInclude Include="..\..\external\edtaa3func\edtaa3func.h" />
     <ClInclude Include="..\..\external\flatbuffers\flatbuffers.h" />
@@ -604,13 +691,55 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="..\3d\CCSprite3D.h" />
     <ClInclude Include="..\3d\CCSprite3DMaterial.h" />
     <ClInclude Include="..\3d\cocos3d.h" />
-    <ClInclude Include="..\audio\include\AudioEngine.h" />
-    <ClInclude Include="..\audio\include\Export.h" />
-    <ClInclude Include="..\audio\include\SimpleAudioEngine.h" />
-    <ClInclude Include="..\audio\win32\AudioCache.h" />
-    <ClInclude Include="..\audio\win32\AudioEngine-win32.h" />
-    <ClInclude Include="..\audio\win32\AudioPlayer.h" />
-    <ClInclude Include="..\audio\win32\MciPlayer.h" />
+    <ClInclude Include="..\audio\libogg\ogg\ogg.h" />
+    <ClInclude Include="..\audio\libogg\ogg\os_types.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\backends.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\bitrate.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\books\coupled\res_books_51.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\books\coupled\res_books_stereo.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\books\floor\floor_books.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\books\uncoupled\res_books_uncoupled.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\codebook.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\codec_internal.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\envelope.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\highlevel.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\lookup.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\lookup_data.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\lpc.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\lsp.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\masking.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\mdct.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\misc.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\floor_all.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\psych_11.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\psych_16.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\psych_44.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\psych_8.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\residue_16.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\residue_44.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\residue_44p51.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\residue_44u.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\residue_8.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_11.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_16.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_22.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_32.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_44.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_44p51.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_44u.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_8.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\modes\setup_X.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\os.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\psy.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\registry.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\scales.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\smallft.h" />
+    <ClInclude Include="..\audio\libvorbis\lib\window.h" />
+    <ClInclude Include="..\audio\libvorbis\vorbis\codec.h" />
+    <ClInclude Include="..\audio\libvorbis\vorbis\vorbisenc.h" />
+    <ClInclude Include="..\audio\libvorbis\vorbis\vorbisfile.h" />
+    <ClInclude Include="..\audio\RDAudio.h" />
+    <ClInclude Include="..\audio\RDAudioOgg.h" />
     <ClInclude Include="..\base\atitc.h" />
     <ClInclude Include="..\base\base64.h" />
     <ClInclude Include="..\base\CCAutoreleasePool.h" />
@@ -619,7 +748,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="..\base\CCConfiguration.h" />
     <ClInclude Include="..\base\CCConsole.h" />
     <ClInclude Include="..\base\CCData.h" />
-    <ClInclude Include="..\base\CCDataVisitor.h" />
     <ClInclude Include="..\base\CCDirector.h" />
     <ClInclude Include="..\base\CCEvent.h" />
     <ClInclude Include="..\base\CCEventAcceleration.h" />
@@ -667,47 +795,9 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="..\base\utlist.h" />
     <ClInclude Include="..\base\ZipUtils.h" />
     <ClInclude Include="..\cocos2d.h" />
-    <ClInclude Include="..\deprecated\CCArray.h" />
-    <ClInclude Include="..\deprecated\CCBool.h" />
-    <ClInclude Include="..\deprecated\CCDeprecated.h" />
-    <ClInclude Include="..\deprecated\CCDictionary.h" />
-    <ClInclude Include="..\deprecated\CCDouble.h" />
-    <ClInclude Include="..\deprecated\CCFloat.h" />
-    <ClInclude Include="..\deprecated\CCInteger.h" />
-    <ClInclude Include="..\deprecated\CCNotificationCenter.h" />
-    <ClInclude Include="..\deprecated\CCSet.h" />
-    <ClInclude Include="..\deprecated\CCString.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBAnimationManager.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBFileLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBKeyframe.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBMemberVariableAssigner.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBReader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBSelectorResolver.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBSequence.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCBSequenceProperty.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCControlButtonLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCControlLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCLabelBMFontLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCLabelTTFLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCLayerColorLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCLayerGradientLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCLayerLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCMenuItemImageLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCMenuItemLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCMenuLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCNode+CCBRelativePositioning.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCNodeLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCNodeLoaderLibrary.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCNodeLoaderListener.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCParticleSystemQuadLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCScale9SpriteLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCScrollViewLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CCSpriteLoader.h" />
-    <ClInclude Include="..\editor-support\cocosbuilder\CocosBuilder.h" />
     <ClInclude Include="..\editor-support\cocostudio\ActionTimeline\CCActionTimeline.h" />
     <ClInclude Include="..\editor-support\cocostudio\ActionTimeline\CCActionTimelineCache.h" />
     <ClInclude Include="..\editor-support\cocostudio\ActionTimeline\CCFrame.h" />
-    <ClInclude Include="..\editor-support\cocostudio\ActionTimeline\CCNodeReader.h" />
     <ClInclude Include="..\editor-support\cocostudio\ActionTimeline\CCTimeLine.h" />
     <ClInclude Include="..\editor-support\cocostudio\ActionTimeline\CCTimelineMacro.h" />
     <ClInclude Include="..\editor-support\cocostudio\ActionTimeline\CSLoader.h" />
@@ -724,7 +814,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="..\editor-support\cocostudio\CCBone.h" />
     <ClInclude Include="..\editor-support\cocostudio\CCColliderDetector.h" />
     <ClInclude Include="..\editor-support\cocostudio\CCComAttribute.h" />
-    <ClInclude Include="..\editor-support\cocostudio\CCComAudio.h" />
     <ClInclude Include="..\editor-support\cocostudio\CCComBase.h" />
     <ClInclude Include="..\editor-support\cocostudio\CCComController.h" />
     <ClInclude Include="..\editor-support\cocostudio\CCComRender.h" />
@@ -754,7 +843,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="..\editor-support\cocostudio\WidgetCallBackHandlerProtocol.h" />
     <ClInclude Include="..\editor-support\cocostudio\WidgetReader\ButtonReader\ButtonReader.h" />
     <ClInclude Include="..\editor-support\cocostudio\WidgetReader\CheckBoxReader\CheckBoxReader.h" />
-    <ClInclude Include="..\editor-support\cocostudio\WidgetReader\ComAudioReader\ComAudioReader.h" />
     <ClInclude Include="..\editor-support\cocostudio\WidgetReader\GameMapReader\GameMapReader.h" />
     <ClInclude Include="..\editor-support\cocostudio\WidgetReader\ImageViewReader\ImageViewReader.h" />
     <ClInclude Include="..\editor-support\cocostudio\WidgetReader\LayoutReader\LayoutReader.h" />
@@ -788,10 +876,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="..\math\Vec2.h" />
     <ClInclude Include="..\math\Vec3.h" />
     <ClInclude Include="..\math\Vec4.h" />
-    <ClInclude Include="..\network\HttpClient.h" />
-    <ClInclude Include="..\network\HttpRequest.h" />
-    <ClInclude Include="..\network\HttpResponse.h" />
-    <ClInclude Include="..\network\SocketIO.h" />
     <ClInclude Include="..\network\WebSocket.h" />
     <ClInclude Include="..\physics\CCPhysicsBody.h" />
     <ClInclude Include="..\physics\CCPhysicsContact.h" />
@@ -846,8 +930,8 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="..\ui\GUIExport.h" />
     <ClInclude Include="..\ui\UIButton.h" />
     <ClInclude Include="..\ui\UICheckBox.h" />
-    <ClInclude Include="..\ui\UIDeprecated.h" />
     <ClInclude Include="..\ui\UIEditBox\UIEditBox.h" />
+    <ClInclude Include="..\ui\UIEditBox\UIEditBoxImpl-common.h" />
     <ClInclude Include="..\ui\UIEditBox\UIEditBoxImpl-win32.h" />
     <ClInclude Include="..\ui\UIEditBox\UIEditBoxImpl.h" />
     <ClInclude Include="..\ui\UIHBox.h" />
@@ -894,7 +978,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="CCClippingRectangleNode.h" />
     <ClInclude Include="CCComponent.h" />
     <ClInclude Include="CCComponentContainer.h" />
-    <ClInclude Include="CCDrawingPrimitives.h" />
     <ClInclude Include="CCDrawNode.h" />
     <ClInclude Include="CCFastTMXLayer.h" />
     <ClInclude Include="CCFastTMXTiledMap.h" />
@@ -904,22 +987,16 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="CCFontCharMap.h" />
     <ClInclude Include="CCFontFNT.h" />
     <ClInclude Include="CCFontFreeType.h" />
-    <ClInclude Include="CCGLBufferedNode.h" />
     <ClInclude Include="CCGrabber.h" />
     <ClInclude Include="CCGrid.h" />
     <ClInclude Include="CCLabel.h" />
     <ClInclude Include="CCLabelAtlas.h" />
-    <ClInclude Include="CCLabelBMFont.h" />
     <ClInclude Include="CCLabelTextFormatter.h" />
-    <ClInclude Include="CCLabelTTF.h" />
     <ClInclude Include="CCLayer.h" />
     <ClInclude Include="CCLight.h" />
-    <ClInclude Include="CCMenu.h" />
-    <ClInclude Include="CCMenuItem.h" />
     <ClInclude Include="CCMotionStreak.h" />
     <ClInclude Include="CCNode.h" />
     <ClInclude Include="CCNodeGrid.h" />
-    <ClInclude Include="CCParallaxNode.h" />
     <ClInclude Include="CCParticleBatchNode.h" />
     <ClInclude Include="CCParticleExamples.h" />
     <ClInclude Include="CCParticleSystem.h" />
@@ -933,7 +1010,6 @@ xcopy /Y /Q "$(ProjectDir)..\..\external\chipmunk\prebuilt\win32\*.*" "$(OutDir)
     <ClInclude Include="CCSpriteFrame.h" />
     <ClInclude Include="CCSpriteFrameCache.h" />
     <ClInclude Include="CCTextFieldTTF.h" />
-    <ClInclude Include="CCTileMapAtlas.h" />
     <ClInclude Include="CCTMXLayer.h" />
     <ClInclude Include="CCTMXObjectGroup.h" />
     <ClInclude Include="CCTMXTiledMap.h" />

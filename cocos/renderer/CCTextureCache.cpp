@@ -39,24 +39,13 @@ THE SOFTWARE.
 #include "platform/CCFileUtils.h"
 #include "base/ccUtils.h"
 
-#include "deprecated/CCString.h"
-
-
-#ifdef EMSCRIPTEN
-#include <emscripten/emscripten.h>
-#include "platform/emscripten/CCTextureCacheEmscripten.h"
-#endif // EMSCRIPTEN
+#include "base/ccUTF8.h"
 
 using namespace std;
 
 NS_CC_BEGIN
 
 // implementation TextureCache
-
-TextureCache * TextureCache::getInstance()
-{
-    return Director::getInstance()->getTextureCache();
-}
 
 TextureCache::TextureCache()
 : _loadingThread(nullptr)
@@ -75,19 +64,6 @@ TextureCache::~TextureCache()
         (it->second)->release();
 
     CC_SAFE_DELETE(_loadingThread);
-}
-
-void TextureCache::destroyInstance()
-{
-}
-
-TextureCache * TextureCache::sharedTextureCache() 
-{
-    return Director::getInstance()->getTextureCache();
-}
-
-void TextureCache::purgeSharedTextureCache() 
-{ 
 }
 
 std::string TextureCache::getDescription() const
@@ -131,12 +107,12 @@ void TextureCache::addImageAsync(const std::string &path, const std::function<vo
     ++_asyncRefCount;
 
     // generate async struct
-    AsyncStruct *data = new (std::nothrow) AsyncStruct(fullpath, callback);
+    AsyncStruct *data = new (std::nothrow) AsyncStruct(fullpath, callback, Texture2D::getDefaultAlphaPixelFormat());
 
     // add async struct into queue
-    _asyncStructQueueMutex.lock();
+    std::unique_lock<std::mutex> lock(_asyncStructQueueMutex);
     _asyncStructQueue->push(data);
-    _asyncStructQueueMutex.unlock();
+    lock.unlock();
 
     _sleepCondition.notify_one();
 }
@@ -173,25 +149,20 @@ void TextureCache::loadImage()
     while (true)
     {
         std::queue<AsyncStruct*> *pQueue = _asyncStructQueue;
-        _asyncStructQueueMutex.lock();
-        if (pQueue->empty())
-        {
-            _asyncStructQueueMutex.unlock();
+        std::unique_lock<std::mutex> lock(_asyncStructQueueMutex);
+        // deal with fade notify
+        while (pQueue->empty()) {
+            // ONLY exit while the queue is empty
             if (_needQuit) {
-                break;
+                lock.unlock();
+                return;
             }
-            else {
-                std::unique_lock<std::mutex> lk(_sleepMutex);
-                _sleepCondition.wait(lk);
-                continue;
-            }
+            _sleepCondition.wait(lock);
         }
-        else
-        {
-            asyncStruct = pQueue->front();
-            pQueue->pop();
-            _asyncStructQueueMutex.unlock();
-        }        
+        
+        asyncStruct = pQueue->front();
+        pQueue->pop();
+        lock.unlock();
 
         Image *image = nullptr;
         bool generateImage = false;
@@ -274,7 +245,7 @@ void TextureCache::addImageAsyncCallBack(float dt)
             // generate texture in render thread
             texture = new (std::nothrow) Texture2D();
 
-            texture->initWithImage(image);
+            texture->initWithImage(image, asyncStruct->pixelFormat);
 
 #if CC_ENABLE_CACHE_TEXTURE_DATA
             // cache the texture file name
@@ -517,14 +488,6 @@ Texture2D* TextureCache::getTextureForKey(const std::string &textureKeyName) con
     return nullptr;
 }
 
-void TextureCache::reloadAllTextures()
-{
-//will do nothing
-// #if CC_ENABLE_CACHE_TEXTURE_DATA
-//     VolatileTextureMgr::reloadAllTextures();
-// #endif
-}
-
 void TextureCache::waitForQuit()
 {
     // notify sub thread to quick
@@ -733,10 +696,7 @@ void VolatileTextureMgr::reloadAllTextures()
                 
                 if (image && image->initWithImageData(data.getBytes(), data.getSize()))
                 {
-                    Texture2D::PixelFormat oldPixelFormat = Texture2D::getDefaultAlphaPixelFormat();
-                    Texture2D::setDefaultAlphaPixelFormat(vt->_pixelFormat);
-                    vt->_texture->initWithImage(image);
-                    Texture2D::setDefaultAlphaPixelFormat(oldPixelFormat);
+                    vt->_texture->initWithImage(image, vt->_pixelFormat);
                 }
                 
                 CC_SAFE_RELEASE(image);

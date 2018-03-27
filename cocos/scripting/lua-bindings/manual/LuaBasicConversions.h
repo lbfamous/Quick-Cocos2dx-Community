@@ -69,10 +69,7 @@ extern bool luaval_to_physics_material(lua_State* L,int lo, cocos2d::PhysicsMate
 extern bool luaval_to_affinetransform(lua_State* L,int lo, AffineTransform* outValue, const char* funcName = "");
 extern bool luaval_to_fontdefinition(lua_State* L, int lo, FontDefinition* outValue , const char* funcName = "");
 extern bool luaval_to_mat4(lua_State* L, int lo, cocos2d::Mat4* outValue , const char* funcName = "");
-extern bool luaval_to_array(lua_State* L,int lo, __Array** outValue, const char* funcName = "");
-extern bool luaval_to_dictionary(lua_State* L,int lo, __Dictionary** outValue, const char* funcName = "");
 extern bool luaval_to_array_of_vec2(lua_State* L,int lo,cocos2d::Vec2 **points, int *numPoints, const char* funcName = "");
-extern bool luavals_variadic_to_array(lua_State* L,int argc, __Array** ret);
 extern bool luavals_variadic_to_ccvaluevector(lua_State* L, int argc, cocos2d::ValueVector* ret);
 extern bool luaval_to_vec2(lua_State* L,int lo,cocos2d::Vec2* outValue, const char* funcName = "");
 extern bool luaval_to_vec3(lua_State* L,int lo,cocos2d::Vec3* outValue, const char* funcName = "");
@@ -85,15 +82,6 @@ extern bool luaval_to_vertexattrib(lua_State* L, int lo, cocos2d::VertexAttrib* 
 static inline bool luaval_to_point(lua_State* L,int lo,cocos2d::Vec2* outValue, const char* funcName = "")
 {
     return luaval_to_vec2(L, lo, outValue);
-}
-
-CC_DEPRECATED_ATTRIBUTE static inline bool luaval_to_kmMat4(lua_State* L, int lo, cocos2d::Mat4* outValue , const char* funcName = "")
-{
-    return luaval_to_mat4(L, lo, outValue);
-}
-CC_DEPRECATED_ATTRIBUTE static inline bool luaval_to_array_of_Point(lua_State* L,int lo,cocos2d::Vec2 **points, int *numPoints, const char* funcName = "")
-{
-    return luaval_to_array_of_vec2(L, lo, points, numPoints);
 }
 
 
@@ -218,7 +206,7 @@ extern bool luaval_to_ccvaluemapintkey(lua_State* L, int lo, cocos2d::ValueMapIn
 extern bool luaval_to_ccvaluevector(lua_State* L, int lo, cocos2d::ValueVector* ret, const char* funcName = "");
 
 template <class T>
-bool luaval_to_object(lua_State* L, int lo, const char* type, T** ret)
+bool luaval_to_object(lua_State* L, int lo, const char* type, T** ret, const char* funcName = "")
 {
     if(nullptr == L || lua_gettop(L) < lo)
         return false;
@@ -227,10 +215,10 @@ bool luaval_to_object(lua_State* L, int lo, const char* type, T** ret)
         return false;
     
     *ret = static_cast<T*>(tolua_tousertype(L, lo, 0));
-    
-    if (nullptr == ret)
-        LUA_PRECONDITION(ret, "Invalid Native Object");
-    
+
+    if (nullptr == *ret)
+        CCLOG("Warning: %s argument %d is invalid native object(nullptr)", funcName, lo);
+
     return true;
 }
 
@@ -256,8 +244,6 @@ extern void physics_contactdata_to_luaval(lua_State* L, const PhysicsContactData
 #endif
 extern void affinetransform_to_luaval(lua_State* L,const AffineTransform& inValue);
 extern void fontdefinition_to_luaval(lua_State* L,const FontDefinition& inValue);
-extern void array_to_luaval(lua_State* L, __Array* inValue);
-extern void dictionary_to_luaval(lua_State* L, __Dictionary* dict);
 extern void mat4_to_luaval(lua_State* L, const cocos2d::Mat4& mat);
 extern void blendfunc_to_luaval(lua_State* L, const cocos2d::BlendFunc& func);
 extern void ttfconfig_to_luaval(lua_State* L, const cocos2d::TTFConfig& config);
@@ -267,11 +253,6 @@ extern void vertexattrib_to_luaval(lua_State* L, const cocos2d::VertexAttrib& ve
 static inline void point_to_luaval(lua_State* L,const cocos2d::Vec2& pt)
 {
     vec2_to_luaval(L, pt);
-}
-
-CC_DEPRECATED_ATTRIBUTE static inline void points_to_luaval(lua_State* L,const cocos2d::Vec2* points, int count)
-{
-    vec2_array_to_luaval(L, points, count);
 }
 
 template <class T>

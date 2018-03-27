@@ -37,7 +37,7 @@
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventCustom.h"
 
-#include "deprecated/CCString.h"
+#include "base/ccUTF8.h"
 
 NS_CC_BEGIN
 
@@ -53,18 +53,6 @@ Label* Label::create()
     }
 
     return ret;
-}
-
-Label* Label::create(const std::string& text, const std::string& font, float fontSize, const Size& dimensions /* = Size::ZERO */, TextHAlignment hAlignment /* = TextHAlignment::LEFT */, TextVAlignment vAlignment /* = TextVAlignment::TOP */)
-{
-    if (FileUtils::getInstance()->isFileExist(font))
-    {
-        return createWithTTF(text,font,fontSize,dimensions,hAlignment,vAlignment);
-    } 
-    else
-    {
-        return createWithSystemFont(text,font,fontSize,dimensions,hAlignment,vAlignment);
-    }
 }
 
 Label* Label::createWithSystemFont(const std::string& text, const std::string& font, float fontSize, const Size& dimensions /* = Size::ZERO */, TextHAlignment hAlignment /* = TextHAlignment::LEFT */, TextVAlignment vAlignment /* = TextVAlignment::TOP */)
@@ -904,6 +892,9 @@ void Label::createSpriteWithFontDefinition()
     texture->initWithString(_originalUTF8String.c_str(),_fontDefinition);
 
     _textSprite = Sprite::createWithTexture(texture);
+    //set camera mask using label's camera mask, because _textSprite may be null when setting camera mask to label
+    _textSprite->setCameraMask(getCameraMask());
+    _textSprite->setGlobalZOrder(getGlobalZOrder());
     _textSprite->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
     this->setContentSize(_textSprite->getContentSize());
     texture->release();
@@ -916,24 +907,6 @@ void Label::createSpriteWithFontDefinition()
 
     _textSprite->updateDisplayedColor(_displayedColor);
     _textSprite->updateDisplayedOpacity(_displayedOpacity);
-}
-
-void Label::setFontDefinition(const FontDefinition& textDefinition)
-{
-    _fontDefinition = textDefinition;
-#if (CC_TARGET_PLATFORM != CC_PLATFORM_ANDROID) && (CC_TARGET_PLATFORM != CC_PLATFORM_IOS)
-    if (_fontDefinition._stroke._strokeEnabled)
-    {
-        CCLOGERROR("Currently only supported on iOS and Android!");
-    }
-    _fontDefinition._stroke._strokeEnabled = false;
-#endif
-    if (_fontDefinition._shadow._shadowEnabled)
-    {
-        _fontDefinition._shadow._shadowEnabled = false;
-        enableShadow(Color4B(0,0,0,255 * _fontDefinition._shadow._shadowOpacity),_fontDefinition._shadow._shadowOffset,_fontDefinition._shadow._shadowBlur);
-    }
-    _compatibleMode = true;
 }
 
 void Label::updateContent()
@@ -1043,6 +1016,8 @@ void Label::drawTextSprite(Renderer *renderer, uint32_t parentFlags)
             {
                 _shadowNode->setBlendFunc(_blendFunc);
             }
+            _shadowNode->setCameraMask(getCameraMask());
+            _shadowNode->setGlobalZOrder(getGlobalZOrder());
             _shadowNode->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
             _shadowNode->setColor(_shadowColor);
             _shadowNode->setOpacity(_shadowOpacity * _displayedOpacity);
@@ -1057,9 +1032,23 @@ void Label::drawTextSprite(Renderer *renderer, uint32_t parentFlags)
     _textSprite->visit(renderer, _modelViewTransform, parentFlags);
 }
 
+void Label::setCameraMask(unsigned short mask, bool applyChildren)
+{
+    Node::setCameraMask(mask, applyChildren);
+    
+    if (_textSprite)
+    {
+        _textSprite->setCameraMask(mask, applyChildren);
+    }
+    if (_shadowNode)
+    {
+        _shadowNode->setCameraMask(mask, applyChildren);
+    }
+}
+
 void Label::visit(Renderer *renderer, const Mat4 &parentTransform, uint32_t parentFlags)
 {
-    if (! _visible || _originalUTF8String.empty() || !isVisitableByVisitingCamera())
+    if (!_visible || _originalUTF8String.empty())
     {
         return;
     }
@@ -1087,6 +1076,12 @@ void Label::visit(Renderer *renderer, const Mat4 &parentTransform, uint32_t pare
         _transformDirty = _inverseDirty = true;
 
         _shadowDirty = false;
+    }
+    
+    bool visibleByCamera = isVisitableByVisitingCamera();
+    if (!_textSprite && !visibleByCamera)
+    {
+        return;
     }
 
     // IMPORTANT:
@@ -1235,8 +1230,7 @@ void Label::computeStringNumLines()
 }
 
 int Label::getStringNumLines() const {
-    if (_contentDirty)
-    {
+    if (_contentDirty) {
         const_cast<Label*>(this)->updateContent();
     }
 
@@ -1246,6 +1240,37 @@ int Label::getStringNumLines() const {
 int Label::getStringLength() const
 {
     return static_cast<int>(_currentUTF16String.length());
+}
+
+std::string Label::getStringOfLine(int num)
+{
+    if (_contentDirty) {
+        const_cast<Label*>(this)->updateContent();
+    }
+    
+    std::string utf8str;
+    StringUtils::UTF16ToUTF8(_currentUTF16String, utf8str);
+    
+    std::string::size_type pos1, pos2;
+    pos2 = utf8str.find('\n');
+    pos1 = 0;
+    while (std::string::npos != pos2) {
+        num--;
+        if (0 == num) {
+            return utf8str.substr(pos1, pos2 - pos1);
+        }
+        
+        pos1 = pos2 + 1;
+        pos2 = utf8str.find('\n', pos1);
+    }
+    if (pos1 != utf8str.length()) {
+        num--;
+        if (0 == num) {
+            return utf8str.substr(pos1);
+        }
+    }
+
+    return "";
 }
 
 // RGBA protocol

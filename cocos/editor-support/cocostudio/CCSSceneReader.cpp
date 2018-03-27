@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 #include "cocostudio/CocoStudio.h"
 #include "ui/CocosGUI.h"
-#include "audio/include/SimpleAudioEngine.h"
 #include "base/ObjectFactory.h"
 
 using namespace cocos2d;
@@ -41,7 +40,6 @@ SceneReader::SceneReader()
 {
     ObjectFactory::getInstance()->registerType(CREATE_CLASS_COMPONENT_INFO(ComAttribute));
     ObjectFactory::getInstance()->registerType(CREATE_CLASS_COMPONENT_INFO(ComRender));
-    ObjectFactory::getInstance()->registerType(CREATE_CLASS_COMPONENT_INFO(ComAudio));
     ObjectFactory::getInstance()->registerType(CREATE_CLASS_COMPONENT_INFO(ComController));
 }
 
@@ -79,7 +77,7 @@ cocos2d::Node* SceneReader::createNodeWithSceneFile(const std::string &fileName,
     else if(file_extension == ".CSB")
     {
         do {
-            std::string binaryFilePath = CCFileUtils::getInstance()->fullPathForFilename(fileName);
+            std::string binaryFilePath = FileUtils::getInstance()->fullPathForFilename(fileName);
             auto fileData = FileUtils::getInstance()->getDataFromFile(binaryFilePath);
             auto fileDataBytes = fileData.getBytes();
             CC_BREAK_IF(fileData.isNull());
@@ -429,7 +427,7 @@ cocos2d::Node* SceneReader::createObject(CocoLoader *cocoLoader, stExpCocoNode *
         {
             if (pRender == nullptr || attachComponent == AttachComponentType::EMPTY_NODE)
             {
-                gb = CCNode::create();
+                gb = Node::create();
                 if (pRender != nullptr)
                 {
                     _vecComs.push_back(pRender);
@@ -584,7 +582,6 @@ void SceneReader::destroyInstance()
 {
     DictionaryHelper::destroyInstance();
     TriggerMng::destroyInstance();
-    CocosDenshion::SimpleAudioEngine::end();
     CC_SAFE_DELETE(s_sharedReader);
 }
 

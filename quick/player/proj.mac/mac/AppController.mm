@@ -124,11 +124,6 @@ std::string getCurAppName(void)
             if (arg.length()) args.push_back(arg);
         }
 
-        if (args.size() && args.at(1).at(0) == '/')
-        {
-            // for Code IDE before RC2
-            config->setProjectDir(args.at(1));
-        }
         config->parseCommandLine(args);
     }
 
@@ -311,8 +306,6 @@ std::string getCurAppName(void)
 
 - (void) startup
 {
-    FileUtils::getInstance()->setPopupNotify(false);
-    
     std::string path = _project.getQuickCocos2dxRootPath();
     const string projectDir = _project.getProjectDir();
     if (projectDir.length())
@@ -324,9 +317,7 @@ std::string getCurAppName(void)
         }
     }
     
-    // set framework path
-    if (!_project.isLoadPrecompiledFramework())
-    {
+    if (!FileUtils::getInstance()->isDirectoryExist(_project.getProjectDir() + "src/framework")) {
         FileUtils::getInstance()->addSearchPath(_project.getQuickCocos2dxRootPath() + "quick/");
     }
 
@@ -402,17 +393,19 @@ std::string getCurAppName(void)
 
 - (void)handleNotification:(NSNotification *)note
 {
-    //NSLog(@"Received notification: %@", note);
     [_pipeReadHandle readInBackgroundAndNotify] ;
     NSData *data = [[note userInfo] objectForKey:NSFileHandleNotificationDataItem];
     NSString *str = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-
     //show log to console
-    [_consoleController trace:str];
-    if(_fileHandle!=nil){
-        [_fileHandle writeData:[str dataUsingEncoding:NSUTF8StringEncoding]];
+    if (str) {
+        [_consoleController trace:str];
+        if(_fileHandle != nil)
+        {
+            [_fileHandle writeData:[str dataUsingEncoding:NSUTF8StringEncoding]];
+        }
+    } else {
+        NSLog(@"Received non utf8 data, can't print");
     }
-
 }
 
 - (void) close_debugLogFile

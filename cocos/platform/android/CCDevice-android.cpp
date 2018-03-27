@@ -102,11 +102,16 @@ public:
     {
            JniMethodInfo methodInfo;
            if (! JniHelper::getStaticMethodInfo(methodInfo, "org/cocos2dx/lib/Cocos2dxBitmap", "createTextBitmapShadowStroke",
-               "(Ljava/lang/String;Ljava/lang/String;IFFFIIIZFFFFZFFFF)Z"))
+               "([BLjava/lang/String;IFFFIIIZFFFFZFFFF)Z"))
            {
                CCLOG("%s %d: error to get methodInfo", __FILE__, __LINE__);
                return false;
            }
+
+		   if (fontSize <= 0) {
+			   CCLOG("%s %d: fontSize must be greater than 0", __FILE__, __LINE__);
+			   return false;
+		   }
 
            // Do a full lookup for the font path using FileUtils in case the given font name is a relative path to a font file asset,
            // or the path has been mapped to a different location in the app package:
@@ -125,7 +130,9 @@ public:
             * and data.
             * use this approach to decrease the jni call number
            */
-           jstring jstrText = methodInfo.env->NewStringUTF(text);
+		   int count = strlen(text);
+		   jbyteArray strArray = methodInfo.env->NewByteArray(count);
+		   methodInfo.env->SetByteArrayRegion(strArray, 0, count, reinterpret_cast<const jbyte*>(text));
            jstring jstrFont = methodInfo.env->NewStringUTF(fullPathOrFontName.c_str());
 
            if(!shadow)
@@ -142,13 +149,13 @@ public:
                strokeColorB = 0.0f;
                strokeSize = 0.0f;
            }
-           if(!methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, jstrText,
+           if(!methodInfo.env->CallStaticBooleanMethod(methodInfo.classID, methodInfo.methodID, strArray,
                jstrFont, (int)fontSize, textTintR, textTintG, textTintB, eAlignMask, nWidth, nHeight, shadow, shadowDeltaX, -shadowDeltaY, shadowBlur, shadowOpacity, stroke, strokeColorR, strokeColorG, strokeColorB, strokeSize))
            {
                 return false;
            }
 
-           methodInfo.env->DeleteLocalRef(jstrText);
+           methodInfo.env->DeleteLocalRef(strArray);
            methodInfo.env->DeleteLocalRef(jstrFont);
            methodInfo.env->DeleteLocalRef(methodInfo.classID);
 

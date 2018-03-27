@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 Copyright (c) 2008-2010 Ricardo Quesada
 Copyright (c) 2010-2013 cocos2d-x.org
 Copyright (c) 2011      Zynga Inc.
@@ -31,7 +31,6 @@ THE SOFTWARE.
 // standard includes
 #include <string>
 
-#include "2d/CCDrawingPrimitives.h"
 #include "2d/CCSpriteFrameCache.h"
 #include "platform/CCFileUtils.h"
 
@@ -58,6 +57,7 @@ THE SOFTWARE.
 #include "base/CCAutoreleasePool.h"
 #include "base/CCConfiguration.h"
 #include "platform/CCApplication.h"
+#include "audio/RDAudio.h"
 //#include "platform/CCGLViewImpl.h"
 
 /**
@@ -108,6 +108,7 @@ bool Director::init(void)
     // scenes
     _runningScene = nullptr;
     _nextScene = nullptr;
+    _onCaptured = nullptr;
 
     _notificationNode = nullptr;
 
@@ -158,6 +159,8 @@ bool Director::init(void)
 
     _console = new (std::nothrow) Console;
 
+    // init OpenAL
+    RDAudio::getInstance();
     return true;
 }
 
@@ -303,6 +306,11 @@ void Director::drawScene()
         showStats();
     }
     _renderer->render();
+    
+    // do Screem Capture after all rendered
+    if (_onCaptured) {
+        doCaptureScreen();
+    }
 
     _eventDispatcher->dispatchEvent(_eventAfterDraw);
 
@@ -403,11 +411,7 @@ TextureCache* Director::getTextureCache() const
 
 void Director::initTextureCache()
 {
-#ifdef EMSCRIPTEN
-    _textureCache = new (std::nothrow) TextureCacheEmscripten();
-#else
     _textureCache = new (std::nothrow) TextureCache();
-#endif // EMSCRIPTEN
 }
 
 void Director::destroyTextureCache()
@@ -785,6 +789,51 @@ Vec2 Director::getVisibleOrigin() const
     }
 }
 
+void Director::doCaptureScreen(void)
+{
+    auto glView = Director::getInstance()->getOpenGLView();
+    auto frameSize = glView->getFrameSize();
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
+    frameSize = frameSize * glView->getFrameZoomFactor() * glView->getRetinaFactor();
+#endif
+    
+    int width = (int)frameSize.width;
+    int height = (int)frameSize.height;
+    
+    ssize_t dataLen = width * height * 4;
+    GLubyte *buffer = (GLubyte *)malloc(dataLen);
+    GLubyte *flippedBuffer = (GLubyte *)malloc(dataLen);//free by Image
+    if (!buffer || !flippedBuffer){
+        _onCaptured(NULL);
+        _onCaptured = NULL;
+        CC_SAFE_FREE(buffer);
+        CC_SAFE_FREE(flippedBuffer);
+        return;
+    }
+    
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    
+    // do flip
+    for (int row = 0; row < height; ++row) {
+        memcpy(flippedBuffer + (height - row - 1) * width * 4, buffer + row * width * 4, width * 4);
+    }
+    CC_SAFE_FREE(buffer);
+    
+    Image *image = new (std::nothrow) Image();
+    image->initWithRawData(flippedBuffer, dataLen, width, height, 8);
+    
+    // callback
+    _onCaptured(image);
+    _onCaptured = NULL;
+    image->release();
+}
+
+void Director::captureScreen(CaptureCB onCaptured)
+{
+    _onCaptured = onCaptured;
+}
+
 // scene management
 
 void Director::runWithScene(Scene *scene)
@@ -929,6 +978,14 @@ void Director::purgeDirector()
     
     _runningScene = nullptr;
     _nextScene = nullptr;
+    
+    if(_notificationNode)
+    {
+        _notificationNode->onExit();
+        _notificationNode->cleanup();
+        _notificationNode->release();
+        _notificationNode = nullptr;
+    }
 
     // remove all objects, but don't release it.
     // runWithScene might be executed after 'end'.
@@ -946,19 +1003,6 @@ void Director::purgeDirector()
     FontFreeType::shutdownFreeType();
 
     // purge all managed caches
-    
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif _MSC_VER >= 1400 //vs 2005 or higher
-#pragma warning (push)
-#pragma warning (disable: 4996)
-#endif
-    DrawPrimitives::free();
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-#pragma GCC diagnostic warning "-Wdeprecated-declarations"
-#elif _MSC_VER >= 1400 //vs 2005 or higher
-#pragma warning (pop)
-#endif
     AnimationCache::destroyInstance();
     SpriteFrameCache::destroyInstance();
     GLProgramCache::destroyInstance();
@@ -1210,9 +1254,18 @@ void Director::setContentScaleFactor(float scaleFactor)
 
 void Director::setNotificationNode(Node *node)
 {
-    CC_SAFE_RELEASE(_notificationNode);
-    _notificationNode = node;
-    CC_SAFE_RETAIN(_notificationNode);
+    if (_notificationNode) { // remove old
+        _notificationNode->onExitTransitionDidStart();
+        _notificationNode->onExit();
+        _notificationNode->cleanup();
+        _notificationNode->release();
+    }
+    _notificationNode = node; // update
+    if (_notificationNode) { // init new
+        _notificationNode->onEnter();
+        _notificationNode->onEnterTransitionDidFinish();
+        _notificationNode->retain();
+    }
 }
 
 void Director::setScheduler(Scheduler* scheduler)

@@ -160,27 +160,20 @@ void DataReaderHelper::loadData()
     while (true)
     {
         std::queue<AsyncStruct *> *pQueue = _asyncStructQueue;
-        _asyncStructQueueMutex.lock(); // get async struct from queue
-        if (pQueue->empty())
-        {
-            _asyncStructQueueMutex.unlock();
-            if (need_quit)
-            {
-                break;
+        std::unique_lock<std::mutex> lock(_asyncStructQueueMutex);
+        // deal with fade notify
+        while (pQueue->empty()) {
+            // ONLY exit while the queue is empty
+            if (need_quit) {
+                lock.unlock();
+                return;
             }
-            else
-            {
-				std::unique_lock<std::mutex> lk(_sleepMutex);
-				_sleepCondition.wait(lk);
-                continue;
-            }
+            _sleepCondition.wait(lock);
         }
-        else
-        {
-            pAsyncStruct = pQueue->front();
-            pQueue->pop();
-            _asyncStructQueueMutex.unlock();
-        }
+
+        pAsyncStruct = pQueue->front();
+        pQueue->pop();
+        lock.unlock();
 
         // generate data info
         DataInfo *pDataInfo = new (std::nothrow) DataInfo();
@@ -295,22 +288,19 @@ void DataReaderHelper::addDataFromFile(const std::string& filePath)
         basefilePath = "";
     }
 
-
     std::string filePathStr =  filePath;
     size_t startPos = filePathStr.find_last_of(".");
     std::string str = &filePathStr[startPos];
-
-    // Read content from file
-    std::string fullPath = FileUtils::getInstance()->fullPathForFilename(filePath);
-    bool isbinaryfilesrc = str==".csb";
-    std::string filemode("r");
-    if(isbinaryfilesrc)
-        filemode += "b";
-    ssize_t filesize;
+    bool isbinaryfilesrc = str == ".csb";
     
+    std::string contentStr;
     _dataReaderHelper->_getFileMutex.lock();
-    unsigned char *pBytes = FileUtils::getInstance()->getFileData(filePath, filemode.c_str(), &filesize);
-    std::string contentStr((const char*)pBytes,filesize);
+    if (isbinaryfilesrc) {
+        Data fileDate = FileUtils::getInstance()->getDataFromFile(filePath);
+        contentStr = std::string((const char*)fileDate.getBytes(), fileDate.getSize());
+    } else {
+        contentStr = FileUtils::getInstance()->getStringFromFile(filePath);
+    }
     _dataReaderHelper->_getFileMutex.unlock();
     
     DataInfo dataInfo;
@@ -329,8 +319,6 @@ void DataReaderHelper::addDataFromFile(const std::string& filePath)
     {
         DataReaderHelper::addDataFromBinaryCache(contentStr.c_str(),&dataInfo);
     }
-
-	free(pBytes);
 }
 
 void DataReaderHelper::addDataFromFileAsync(const std::string& imagePath, const std::string& plistPath, const std::string& filePath, Ref *target, SEL_SCHEDULE selector)
@@ -411,27 +399,16 @@ void DataReaderHelper::addDataFromFileAsync(const std::string& imagePath, const 
     std::string filePathStr =  filePath;
     size_t startPos = filePathStr.find_last_of(".");
     std::string str = &filePathStr[startPos];
-
-    std::string fullPath = FileUtils::getInstance()->fullPathForFilename(filePath);
-
-    bool isbinaryfilesrc = str==".csb";
-    std::string filereadmode("r");
-    if (isbinaryfilesrc) {
-        filereadmode += "b";
-    }
-    ssize_t size;
-    // FIXME: fileContent is being leaked
+    bool isbinaryfilesrc = str == ".csb";
     
     _dataReaderHelper->_getFileMutex.lock();
-    unsigned char *pBytes = FileUtils::getInstance()->getFileData(fullPath.c_str() , filereadmode.c_str(), &size);
+    if (isbinaryfilesrc) {
+        Data fileDate = FileUtils::getInstance()->getDataFromFile(filePath);
+        data->fileContent = std::string((const char*)fileDate.getBytes(), fileDate.getSize());
+    } else {
+        data->fileContent = FileUtils::getInstance()->getStringFromFile(filePath);
+    }
     _dataReaderHelper->_getFileMutex.unlock();
-    
-	Data bytecpy;
-    bytecpy.copy(pBytes, size);
-    data->fileContent = std::string((const char*)bytecpy.getBytes(), size);
-
-    // fix memory leak for v3.3
-    free(pBytes);
     
     if (str == ".xml")
     {
@@ -446,11 +423,10 @@ void DataReaderHelper::addDataFromFileAsync(const std::string& imagePath, const 
         data->configType = CocoStudio_Binary;
     }
 
-
     // add async struct into queue
-    _asyncStructQueueMutex.lock();
+    std::unique_lock<std::mutex> lock(_asyncStructQueueMutex);
     _asyncStructQueue->push(data);
-    _asyncStructQueueMutex.unlock();
+    lock.unlock();
 
     _sleepCondition.notify_one();
 }

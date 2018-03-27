@@ -141,7 +141,6 @@ _enabled(true),
 _bright(true),
 _touchEnabled(false),
 _highlight(false),
-_affectByClipping(false),
 _ignoreSize(false),
 _propagateTouchEvents(true),
 _brightStyle(BrightStyle::NONE),
@@ -161,8 +160,6 @@ _flippedY(false),
 _layoutParameterType(LayoutParameter::Type::NONE),
 _focused(false),
 _focusEnabled(true),
-_touchEventListener(nullptr),
-_touchEventSelector(nullptr),
 _ccEventCallback(nullptr),
 _callbackType(""),
 _callbackName("")
@@ -188,7 +185,6 @@ void Widget::cleanupWidget()
         CC_SAFE_DELETE(_focusNavigationController);
         _focusedWidget = nullptr;
     }
-
 }
 
 Widget* Widget::create()
@@ -234,7 +230,7 @@ void Widget::onExit()
 
 void Widget::visit(Renderer *renderer, const Mat4 &parentTransform, uint32_t parentFlags)
 {
-    if (_visible || !isVisitableByVisitingCamera())
+    if (_visible)
     {
         adaptRenderers();
         ProtectedNode::visit(renderer, parentTransform, parentFlags);
@@ -249,6 +245,7 @@ Widget* Widget::getWidgetParent()
 void Widget::setEnabled(bool enabled)
 {
     _enabled = enabled;
+    setBright(enabled);
 }
     
 void Widget::initRenderer()
@@ -308,11 +305,6 @@ void Widget::setContentSize(const cocos2d::Size &contentSize)
     onSizeChanged();
 }
 
-void Widget::setSize(const Size &size)
-{
-    this->setContentSize(size);
-}
-
 void Widget::setSizePercent(const Vec2 &percent)
 {
     _sizePercent = percent;
@@ -342,9 +334,10 @@ void Widget::setSizePercent(const Vec2 &percent)
 
 void Widget::updateSizeAndPosition()
 {
-    Size pSize = _parent->getContentSize();
-    
-    updateSizeAndPosition(pSize);
+    if (_parent) {
+        Size pSize = _parent->getContentSize();
+        updateSizeAndPosition(pSize);
+    }
 }
     
 void Widget::updateSizeAndPosition(const cocos2d::Size &parentSize)
@@ -455,11 +448,6 @@ void Widget::ignoreContentAdaptWithSize(bool ignore)
 bool Widget::isIgnoreContentAdaptWithSize() const
 {
     return _ignoreSize;
-}
-
-const Size& Widget::getSize() const
-{
-    return this->getContentSize();
 }
     
 const Size& Widget::getCustomSize() const
@@ -629,60 +617,6 @@ void Widget::updateChildrenDisplayedRGBA()
     this->setColor(this->getColor());
     this->setOpacity(this->getOpacity());
 }
-
-    
-Widget* Widget::getAncensterWidget(Node* node)
-{
-    if (nullptr == node)
-    {
-        return nullptr;
-    }
-    
-    Node* parent = node->getParent();
-    if (nullptr == parent)
-    {
-        return nullptr;
-    }
-    Widget* parentWidget = dynamic_cast<Widget*>(parent);
-    if (parentWidget)
-    {
-        return parentWidget;
-    }
-    else
-    {
-        return this->getAncensterWidget(parent->getParent());
-    }
-}
-    
-bool Widget::isAncestorsVisible(Node* node)
-{
-    if (nullptr == node)
-    {
-        return true;
-    }
-    Node* parent = node->getParent();
-    
-    if (parent && !parent->isVisible())
-    {
-        return false;
-    }
-    return this->isAncestorsVisible(parent);
-}
-    
-bool Widget::isAncestorsEnabled()
-{
-    Widget* parentWidget = this->getAncensterWidget(this);
-    if (parentWidget == nullptr)
-    {
-        return true;
-    }
-    if (parentWidget && !parentWidget->isEnabled())
-    {
-        return false;
-    }
-    
-    return parentWidget->isAncestorsEnabled();
-}
     
 void Widget::setPropagateTouchEvents(bool isPropagate)
 {
@@ -714,7 +648,7 @@ bool Widget::isSwallowTouches()const
 bool Widget::onTouchBegan(Touch *touch, Event *unusedEvent)
 {
     _hitted = false;
-    if (isVisible() && isEnabled() && isAncestorsEnabled() && isAncestorsVisible(this) )
+    if (isVisible(true) && isEnabled(true))
     {
         _touchBeganPosition = touch->getLocation();
         if(hitTest(_touchBeganPosition) && isClippingParentContainsPoint(_touchBeganPosition))
@@ -742,10 +676,16 @@ bool Widget::onTouchBegan(Touch *touch, Event *unusedEvent)
     
 void Widget::propagateTouchEvent(cocos2d::ui::Widget::TouchEventType event, cocos2d::ui::Widget *sender, cocos2d::Touch *touch)
 {
-    Widget* widgetParent = getWidgetParent();
-    if (widgetParent)
-    {
-        widgetParent->interceptTouchEvent(event, sender, touch);
+    // interceptTouchEvent was override by PageView,ListView,ScrollView
+    // must find a parent to call, otherwise it will be dealed twice.
+    Node *parent = this;
+    while (parent) {
+        parent = parent->getParent();
+        Widget *widget = dynamic_cast<Widget *>(parent);
+        if (widget) {
+            widget->interceptTouchEvent(event, sender, touch);
+            break;
+        }
     }
 }
 
@@ -804,11 +744,6 @@ void Widget::pushDownEvent()
     {
         _touchEventCallback(this, TouchEventType::BEGAN);
     }
-    
-    if (_touchEventListener && _touchEventSelector)
-    {
-        (_touchEventListener->*_touchEventSelector)(this,TOUCH_EVENT_BEGAN);
-    }
     this->release();
 }
 
@@ -819,11 +754,6 @@ void Widget::moveEvent()
     {
         _touchEventCallback(this, TouchEventType::MOVED);
     }
-    
-    if (_touchEventListener && _touchEventSelector)
-    {
-        (_touchEventListener->*_touchEventSelector)(this,TOUCH_EVENT_MOVED);
-    }
     this->release();
 }
 
@@ -833,11 +763,6 @@ void Widget::releaseUpEvent()
     if (_touchEventCallback)
     {
         _touchEventCallback(this, TouchEventType::ENDED);
-    }
-    
-    if (_touchEventListener && _touchEventSelector)
-    {
-        (_touchEventListener->*_touchEventSelector)(this,TOUCH_EVENT_ENDED);
     }
     
     if (_clickEventListener) {
@@ -853,18 +778,7 @@ void Widget::cancelUpEvent()
     {
         _touchEventCallback(this, TouchEventType::CANCELED);
     }
-   
-    if (_touchEventListener && _touchEventSelector)
-    {
-        (_touchEventListener->*_touchEventSelector)(this,TOUCH_EVENT_CANCELED);
-    }
     this->release();
-}
-
-void Widget::addTouchEventListener(Ref *target, SEL_TouchEvent selector)
-{
-    _touchEventListener = target;
-    _touchEventSelector = selector;
 }
     
 void Widget::addTouchEventListener(const ccWidgetTouchCallback& callback)
@@ -896,54 +810,32 @@ bool Widget::hitTest(const Vec2 &pt)
 
 bool Widget::isClippingParentContainsPoint(const Vec2 &pt)
 {
-    _affectByClipping = false;
-    Widget* parent = getWidgetParent();
-    Widget* clippingParent = nullptr;
-    while (parent)
-    {
-        Layout* layoutParent = dynamic_cast<Layout*>(parent);
-        if (layoutParent)
-        {
-            if (layoutParent->isClippingEnabled())
-            {
-                _affectByClipping = true;
-                clippingParent = layoutParent;
-                break;
+    // make sure check not break by non-Layout node.
+    Node *parent = this;
+    while (parent) {
+        parent = parent->getParent();
+        Layout *layout = dynamic_cast<Layout*>(parent);
+        if (layout && layout->isClippingEnabled()) {
+            if (!layout->hitTest(pt)) {
+                return false;
             }
         }
-        parent = parent->getWidgetParent();
-    }
-
-    if (!_affectByClipping)
-    {
-        return true;
-    }
-
-
-    if (clippingParent)
-    {
-        bool bRet = false;
-        if (clippingParent->hitTest(pt))
-        {
-            bRet = true;
-        }
-        if (bRet)
-        {
-            return clippingParent->isClippingParentContainsPoint(pt);
-        }
-        return false;
     }
     return true;
 }
 
 void Widget::interceptTouchEvent(cocos2d::ui::Widget::TouchEventType event, cocos2d::ui::Widget *sender, Touch *touch)
 {
-    Widget* widgetParent = getWidgetParent();
-    if (widgetParent)
-    {
-        widgetParent->interceptTouchEvent(event,sender,touch);
+    // make sure check not break by non-Widget node.
+    Node *parent = this;
+    while (parent) {
+        parent = parent->getParent();
+        Widget *widget = dynamic_cast<Widget *>(parent);
+        if (widget) {
+            widget->interceptTouchEvent(event, sender, touch);
+            break;
+        }
     }
-
 }
 
 void Widget::setPosition(const Vec2 &pos)
@@ -1001,9 +893,25 @@ bool Widget::isBright() const
     return _bright;
 }
 
-bool Widget::isEnabled() const
+bool Widget::isEnabled(bool checkParent) const
 {
-    return _enabled;
+    if (!checkParent) {
+        return _enabled;
+    }
+    
+    // need check Parent
+    if (!_enabled) {
+        return false;
+    }
+    Node *p = _parent;
+    while (p) {
+        Widget* widget = dynamic_cast<Widget *>(p);
+        if (widget && !widget->isEnabled(false)) {
+            return false;
+        }
+        p = p->getParent();
+    }
+    return true;
 }
 
 float Widget::getLeftBoundary() const
@@ -1054,11 +962,6 @@ void Widget::setLayoutParameter(LayoutParameter *parameter)
 LayoutParameter* Widget::getLayoutParameter()const
 {
     return dynamic_cast<LayoutParameter*>(_layoutParameterDictionary.at((int)_layoutParameterType));
-}
-    
-LayoutParameter* Widget::getLayoutParameter(LayoutParameter::Type type)
-{
-    return dynamic_cast<LayoutParameter*>(_layoutParameterDictionary.at((int)type));
 }
 
 std::string Widget::getDescription() const
@@ -1127,8 +1030,6 @@ void Widget::copyProperties(Widget *widget)
     setColor(widget->getColor());
     setOpacity(widget->getOpacity());
     _touchEventCallback = widget->_touchEventCallback;
-    _touchEventListener = widget->_touchEventListener;
-    _touchEventSelector = widget->_touchEventSelector;
     _clickEventListener = widget->_clickEventListener;
     _focused = widget->_focused;
     _focusEnabled = widget->_focusEnabled;

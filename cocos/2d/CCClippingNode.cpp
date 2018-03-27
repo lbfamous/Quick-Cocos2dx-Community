@@ -26,7 +26,6 @@
  */
 
 #include "2d/CCClippingNode.h"
-#include "2d/CCDrawingPrimitives.h"
 #include "renderer/CCGLProgramCache.h"
 #include "renderer/ccGLStateCache.h"
 #include "renderer/CCRenderer.h"
@@ -140,14 +139,6 @@ bool ClippingNode::init(Node *stencil)
 
 void ClippingNode::onEnter()
 {
-#if CC_ENABLE_SCRIPT_BINDING
-    if (_scriptType == kScriptTypeJavascript)
-    {
-        if (ScriptEngineManager::sendNodeEventToJSExtended(this, kNodeOnEnter))
-            return;
-    }
-#endif
-    
     Node::onEnter();
     
     if (_stencil != nullptr)
@@ -219,6 +210,7 @@ void ClippingNode::drawFullScreenQuadClearStencil()
     glProgram->setUniformsForBuiltins();
     glProgram->setUniformLocationWith4fv(colorLocation, (GLfloat*) &color.r, 1);
     
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     GL::enableVertexAttribs( GL::VERTEX_ATTRIB_FLAG_POSITION );
     glVertexAttribPointer(GLProgram::VERTEX_ATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -285,7 +277,7 @@ void ClippingNode::visit(Renderer *renderer, const Mat4 &parentTransform, uint32
     {
         sortAllChildren();
         // draw children zOrder < 0
-        for( ; i < _children.size(); i++ )
+        for(auto size = _children.size(); i < size; i++)
         {
             auto node = _children.at(i);
             
@@ -298,7 +290,7 @@ void ClippingNode::visit(Renderer *renderer, const Mat4 &parentTransform, uint32
         if (visibleByCamera)
             this->draw(renderer, _modelViewTransform, flags);
         
-        for(auto it=_children.cbegin()+i; it != _children.cend(); ++it)
+        for(auto it=_children.cbegin()+i, itCend = _children.cend(); it != itCend; ++it)
             (*it)->visit(renderer, _modelViewTransform, flags);
     }
     else if (visibleByCamera)
@@ -313,6 +305,14 @@ void ClippingNode::visit(Renderer *renderer, const Mat4 &parentTransform, uint32
     renderer->popGroup();
     
     director->popMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
+}
+
+void ClippingNode::setCameraMask(unsigned short mask, bool applyChildren)
+{
+    Node::setCameraMask(mask, applyChildren);
+    
+    if (_stencil)
+        _stencil->setCameraMask(mask, applyChildren);
 }
 
 Node* ClippingNode::getStencil() const

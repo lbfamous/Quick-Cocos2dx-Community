@@ -78,18 +78,6 @@ void GLProgramCache::destroyInstance()
     CC_SAFE_RELEASE_NULL(_sharedGLProgramCache);
 }
 
-// FIXME: deprecated
-GLProgramCache* GLProgramCache::sharedShaderCache()
-{
-    return GLProgramCache::getInstance();
-}
-
-// FIXME: deprecated
-void GLProgramCache::purgeSharedShaderCache()
-{
-    GLProgramCache::destroyInstance();
-}
-
 GLProgramCache::GLProgramCache()
 : _programs()
 {
@@ -219,6 +207,22 @@ void GLProgramCache::loadDefaultGLPrograms()
     p = new GLProgram();
     loadDefaultGLProgram(p, kShaderType_3DSkinPositionNormalTex);
     _programs.insert(std::make_pair(GLProgram::SHADER_3D_SKINPOSITION_NORMAL_TEXTURE, p));
+}
+
+void GLProgramCache::reloadAllGLPrograms()
+{
+    reloadDefaultGLPrograms();
+
+    // reload user defined programs
+    for( auto it = _programs.begin(); it != _programs.end(); ++it ) {
+        GLProgram *pro = (GLProgram *)it->second;
+        if (pro->_vShaderFilename.size() > 0) {
+            pro->reset();
+            pro->initWithFilenames();
+            pro->link();
+            pro->updateUniforms();
+        }
+    }
 }
 
 void GLProgramCache::reloadDefaultGLPrograms()

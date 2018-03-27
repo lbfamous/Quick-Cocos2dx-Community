@@ -64,34 +64,22 @@ public:
 
     /** purges the cache. It releases the retained instance. */
     static void destroyInstance();
-
-    /** @deprecated Use getInstance() instead */
-    CC_DEPRECATED_ATTRIBUTE static GLProgramCache* sharedShaderCache();
-
-    /** @deprecated Use destroyInstance() instead */
-    CC_DEPRECATED_ATTRIBUTE static void purgeSharedShaderCache();
-
-    /** loads the default shaders */
-    void loadDefaultGLPrograms();
-    CC_DEPRECATED_ATTRIBUTE void loadDefaultShaders() { loadDefaultGLPrograms(); }
-
-    /** reload the default shaders */
-    void reloadDefaultGLPrograms();
-    CC_DEPRECATED_ATTRIBUTE void reloadDefaultShaders() { reloadDefaultGLPrograms(); }
+    
+    /** special for android reload GL */
+    void reloadAllGLPrograms();
 
     /** returns a GL program for a given key 
      */
     GLProgram * getGLProgram(const std::string &key);
-    CC_DEPRECATED_ATTRIBUTE GLProgram * getProgram(const std::string &key) { return getGLProgram(key); }
-    CC_DEPRECATED_ATTRIBUTE GLProgram * programForKey(const std::string &key){ return getGLProgram(key); }
 
     /** adds a GLProgram to the cache for a given name */
     void addGLProgram(GLProgram* program, const std::string &key);
-    CC_DEPRECATED_ATTRIBUTE void addProgram(GLProgram* program, const std::string &key) { addGLProgram(program, key); }
 
 private:
     bool init();
     void loadDefaultGLProgram(GLProgram *program, int type);
+    void loadDefaultGLPrograms();//for the first time
+    void reloadDefaultGLPrograms();// for the second time
     
     std::string getShaderMacrosForLight() const;
 

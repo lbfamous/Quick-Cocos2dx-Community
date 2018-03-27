@@ -306,7 +306,7 @@ public:
         _state = SAX_NONE;
     }
 
-    void textHandler(void *ctx, const char *ch, int len)
+    void textHandler(void *ctx, const char *ch, size_t len)
     {
         CC_UNUSED_PARAM(ctx);
         if (_state == SAX_NONE)
@@ -516,6 +516,7 @@ void FileUtils::destroyInstance()
 }
 
 FileUtils::FileUtils()
+:dataDecoder(nullptr)
 {
 }
 
@@ -596,10 +597,9 @@ Data FileUtils::getData(const std::string& filename, bool forString)
     return ret;
 }
 
-void FileUtils::setResourceEncryptKeyAndSign(const std::string& key, const std::string& sign)
+void FileUtils::setFileDataDecoder(FiledataDecoder decoder)
 {
-    _xxteaKey = key;
-    _xxteaSign = sign;
+    dataDecoder = decoder;
 }
 
 std::string FileUtils::getStringFromFile(const std::string& filename)
@@ -616,59 +616,11 @@ Data FileUtils::getDataFromFile(const std::string& filename)
 {
     Data data = getData(filename, false);
     
-    // decrypt XXTEA
-    if (!data.isNull() && _xxteaSign.length() > 0) {
-        bool isXXTEA = true;
-        unsigned char *buf = data.getBytes();
-        ssize_t size = data.getSize();
-        for (int i = 0; isXXTEA && i < _xxteaSign.length() && i < size; ++i) {
-            isXXTEA = buf[i] == _xxteaSign[i];
-        }
-        
-        if (isXXTEA) {
-            xxtea_long len = 0;
-            unsigned char* buffer = xxtea_decrypt(
-                                        buf + _xxteaSign.length(),
-                                        (xxtea_long)size - (xxtea_long)_xxteaSign.length(),
-                                        (unsigned char*)_xxteaKey.c_str(),
-                                        (xxtea_long)_xxteaKey.length(),
-                                        &len);
-            data.clear();
-            data.fastSet(buffer, len);
-        }
+    if (dataDecoder) {
+        dataDecoder(data);
     }
     
     return data;
-}
-
-unsigned char* FileUtils::getFileData(const std::string& filename, const char* mode, ssize_t *size)
-{
-    unsigned char * buffer = nullptr;
-    CCASSERT(!filename.empty() && size != nullptr && mode != nullptr, "Invalid parameters.");
-    *size = 0;
-    do
-    {
-        // read the file from hardware
-        const std::string fullPath = fullPathForFilename(filename);
-        FILE *fp = fopen(fullPath.c_str(), mode);
-        CC_BREAK_IF(!fp);
-        
-        fseek(fp,0,SEEK_END);
-        *size = ftell(fp);
-        fseek(fp,0,SEEK_SET);
-        buffer = (unsigned char*)malloc(*size);
-        *size = fread(buffer,sizeof(unsigned char), *size,fp);
-        fclose(fp);
-    } while (0);
-    
-    if (!buffer)
-    {
-        std::string msg = "Get data from file(";
-        msg.append(filename).append(") failed!");
-        
-        CCLOG("%s", msg.c_str());
-    }
-    return buffer;
 }
 
 unsigned char* FileUtils::getFileDataFromZip(const std::string& zipFilePath, const std::string& filename, ssize_t *size)
@@ -792,12 +744,7 @@ std::string FileUtils::fullPathForFilename(const std::string &filename)
                 _fullPathCache.insert(std::make_pair(filename, fullpath));
                 return fullpath;
             }
-            
         }
-    }
-    
-    if(isPopupNotify()){
-        CCLOG("cocos2d: fullPathForFilename: No file found at %s. Possible missing file.", filename.c_str());
     }
 
     // FIXME: Should it return nullptr ? or an empty string ?
@@ -1280,21 +1227,6 @@ long FileUtils::getFileSize(const std::string &filepath)
     {
         return (long)(info.st_size);
     }
-}
-
-//////////////////////////////////////////////////////////////////////////
-// Notification support when getFileData from invalid file path.
-//////////////////////////////////////////////////////////////////////////
-static bool s_popupNotify = true;
-
-void FileUtils::setPopupNotify(bool notify)
-{
-    s_popupNotify = notify;
-}
-
-bool FileUtils::isPopupNotify()
-{
-    return s_popupNotify;
 }
 
 NS_CC_END

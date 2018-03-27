@@ -126,16 +126,9 @@ public:
     virtual int executeFunction(int numArgs);
     
     virtual int executeFunctionByHandler(int nHandler, int numArgs);
-    virtual int executeFunctionReturnArray(int handler,int numArgs,int numResults,__Array& resultArray);
     virtual int executeFunction(int handler, int numArgs, int numResults, const std::function<void(lua_State*,int)>& func);
 
 	virtual bool handleAssert(const char *msg, const char *cond, const char *file, int line);
-    
-    virtual void setXXTEAKeyAndSign(const char *key, const char *sign);
-    virtual void cleanupXXTEAKeyAndSign();
-    
-    virtual const char *getXXTEAKey(int *len);
-    virtual const char *getXXTEASign(int *len);
     
     int luaLoadBuffer(lua_State *L, const char *chunk, int chunkSize, const char *chunkName);
     int loadChunksFromZIP(const char *zipFilePath);
@@ -145,11 +138,6 @@ protected:
     LuaStack(void)
     : _state(nullptr)
     , _callFromLua(0)
-    , _xxteaEnabled(false)
-    , _xxteaKey(nullptr)
-    , _xxteaKeyLen(0)
-    , _xxteaSign(nullptr)
-    , _xxteaSignLen(0)
     {
     }
     
@@ -158,11 +146,6 @@ protected:
     
     lua_State *_state;
     int _callFromLua;
-    bool  _xxteaEnabled;
-    char* _xxteaKey;
-    int   _xxteaKeyLen;
-    char* _xxteaSign;
-    int   _xxteaSignLen;
 };
 
 NS_CC_END

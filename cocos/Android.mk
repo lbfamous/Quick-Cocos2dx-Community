@@ -6,8 +6,6 @@ LOCAL_MODULE := cocos2dx_internal_static
 
 LOCAL_MODULE_FILENAME := libcocos2dxinternal
 
-LOCAL_ARM_MODE := arm
-
 LOCAL_SRC_FILES := \
 cocos2d.cpp \
 2d/CCAction.cpp \
@@ -32,29 +30,22 @@ cocos2d.cpp \
 2d/CCComponent.cpp \
 2d/CCComponentContainer.cpp \
 2d/CCDrawNode.cpp \
-2d/CCDrawingPrimitives.cpp \
 2d/CCFont.cpp \
 2d/CCFontAtlas.cpp \
 2d/CCFontAtlasCache.cpp \
 2d/CCFontCharMap.cpp \
 2d/CCFontFNT.cpp \
 2d/CCFontFreeType.cpp \
-2d/CCGLBufferedNode.cpp \
 2d/CCGrabber.cpp \
 2d/CCGrid.cpp \
 2d/CCLabel.cpp \
 2d/CCLabelAtlas.cpp \
-2d/CCLabelBMFont.cpp \
-2d/CCLabelTTF.cpp \
 2d/CCLabelTextFormatter.cpp \
 2d/CCLayer.cpp \
 2d/CCLight.cpp \
-2d/CCMenu.cpp \
-2d/CCMenuItem.cpp \
 2d/CCMotionStreak.cpp \
 2d/CCNode.cpp \
 2d/CCNodeGrid.cpp \
-2d/CCParallaxNode.cpp \
 2d/CCParticleBatchNode.cpp \
 2d/CCParticleExamples.cpp \
 2d/CCParticleSystem.cpp \
@@ -74,7 +65,6 @@ cocos2d.cpp \
 2d/CCFastTMXTiledMap.cpp \
 2d/CCTMXXMLParser.cpp \
 2d/CCTextFieldTTF.cpp \
-2d/CCTileMapAtlas.cpp \
 2d/CCTransition.cpp \
 2d/CCTransitionPageTurn.cpp \
 2d/CCTransitionProgress.cpp \
@@ -98,7 +88,6 @@ base/CCAutoreleasePool.cpp \
 base/CCConfiguration.cpp \
 base/CCConsole.cpp \
 base/CCData.cpp \
-base/CCDataVisitor.cpp \
 base/CCDirector.cpp \
 base/CCEvent.cpp \
 base/CCEventAcceleration.cpp \
@@ -164,12 +153,6 @@ renderer/CCVertexIndexData.cpp \
 renderer/CCPrimitive.cpp \
 renderer/CCPrimitiveCommand.cpp \
 renderer/CCTrianglesCommand.cpp \
-deprecated/CCArray.cpp \
-deprecated/CCSet.cpp \
-deprecated/CCString.cpp \
-deprecated/CCDictionary.cpp \
-deprecated/CCDeprecated.cpp \
-deprecated/CCNotificationCenter.cpp \
 physics/CCPhysicsBody.cpp \
 physics/CCPhysicsContact.cpp \
 physics/CCPhysicsJoint.cpp \
@@ -199,8 +182,7 @@ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/../external/tinyxml2 \
                     $(LOCAL_PATH)/../external/unzip \
                     $(LOCAL_PATH)/../external/chipmunk/include/chipmunk \
-                    $(LOCAL_PATH)/../external/xxhash \
-                    $(LOCAL_PATH)/../external/nslog
+                    $(LOCAL_PATH)/../external/xxhash
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/. \
@@ -212,12 +194,13 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/../external/edtaa3func \
                     $(LOCAL_PATH)/../external/xxhash \
                     $(LOCAL_PATH)/../external/ConvertUTF \
-                    $(LOCAL_PATH)/../external/nslog
+					$(LOCAL_PATH)/../external/OpenAL/inc
 
 LOCAL_EXPORT_LDLIBS := -lGLESv2 \
                        -llog \
                        -lz \
-                       -landroid
+                       -landroid \
+                       -lOpenSLES
 
 LOCAL_STATIC_LIBRARIES := cocos_freetype2_static
 LOCAL_STATIC_LIBRARIES += cocos_png_static
@@ -248,11 +231,10 @@ LOCAL_MODULE := cocos2dx_static
 LOCAL_MODULE_FILENAME := libcocos2d
 
 LOCAL_STATIC_LIBRARIES := cocostudio_static
-LOCAL_STATIC_LIBRARIES += cocosbuilder_static
 LOCAL_STATIC_LIBRARIES += cocos3d_static
 LOCAL_STATIC_LIBRARIES += spine_static
 LOCAL_STATIC_LIBRARIES += cocos_network_static
-LOCAL_STATIC_LIBRARIES += audioengine_static
+LOCAL_STATIC_LIBRARIES += static_Rapid2DAudio
 
 include $(BUILD_STATIC_LIBRARY)
 #==============================================================
@@ -264,13 +246,11 @@ $(call import-module,tiff/prebuilt/android)
 $(call import-module,webp/prebuilt/android)
 $(call import-module,chipmunk/prebuilt/android)
 $(call import-module,3d)
-$(call import-module,audio/android)
-$(call import-module,editor-support/cocosbuilder)
+$(call import-module,audio)
 $(call import-module,editor-support/cocostudio)
 $(call import-module,editor-support/spine)
 $(call import-module,network)
 $(call import-module,ui)
-$(call import-module,extensions)
 $(call import-module,Box2D)
 $(call import-module,curl/prebuilt/android)
 $(call import-module,websockets/prebuilt/android)

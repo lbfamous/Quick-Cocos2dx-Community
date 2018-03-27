@@ -1,20 +1,13 @@
 #include "AppDelegate.h"
 #include "CCLuaEngine.h"
-#include "SimpleAudioEngine.h"
 #include "cocos2d.h"
 #include "lua_module_register.h"
 
 #include "native/CCNative.h"
 #include "network/CCHTTPRequest.h"
 #include "luabinding/cocos2dx_extra_luabinding.h"
-#include "luabinding/lua_cocos2dx_extension_filter_auto.hpp"
-#include "luabinding/lua_cocos2dx_extension_nanovg_auto.hpp"
-#include "luabinding/lua_cocos2dx_extension_nanovg_manual.hpp"
-#include "luabinding/HelperFunc_luabinding.h"
 #include "lua_extensions/lua_extensions_more.h"
 #include "PlayerProtocol.h"
-
-using namespace CocosDenshion;
 
 USING_NS_CC;
 USING_NS_CC_EXTRA;
@@ -29,10 +22,6 @@ static void quick_module_register(lua_State *L)
     {
         register_all_quick_manual(L);
         luaopen_cocos2dx_extra_luabinding(L);
-        register_all_cocos2dx_extension_filter(L);
-        register_all_cocos2dx_extension_nanovg(L);
-        register_all_cocos2dx_extension_nanovg_manual(L);
-        luaopen_HelperFunc_luabinding(L);
     }
     lua_pop(L, 1);
 }
@@ -44,7 +33,6 @@ AppDelegate::AppDelegate()
 
 AppDelegate::~AppDelegate()
 {
-    SimpleAudioEngine::end();
 }
 
 //if you want a different context,just modify the value of glContextAttrs
@@ -79,14 +67,9 @@ bool AppDelegate::applicationDidFinishLaunching()
 
     // If you want to use Quick-Cocos2dx-Community, please uncomment below code
     quick_module_register(L);
-
-    LuaStack* stack = engine->getLuaStack();
-    stack->setXXTEAKeyAndSign("2dxLua", "XXTEA");
-    
     
     StartupCall *call = StartupCall::create(this);
     call->startup();
-    
     return true;
 }
 
@@ -94,16 +77,12 @@ bool AppDelegate::applicationDidFinishLaunching()
 void AppDelegate::applicationDidEnterBackground()
 {
     Director::getInstance()->stopAnimation();
-
-    SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
 }
 
 // this function will be called when the app is active again
 void AppDelegate::applicationWillEnterForeground()
 {
     Director::getInstance()->startAnimation();
-
-    SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
 }
 
 
@@ -149,13 +128,6 @@ void StartupCall::startup()
         FileUtils::getInstance()->addSearchPath(workdir);
     }
     
-    // load framework
-    if (project.isLoadPrecompiledFramework())
-    {
-        const string precompiledFrameworkPath = project.getPrecompiledFrameworkPath();
-        stack->loadChunksFromZIP(precompiledFrameworkPath.c_str());
-    }
-    
     // load script
     string env = "__LUA_STARTUP_FILE__=\"";
     env.append(path);
@@ -185,7 +157,7 @@ void StartupCall::trackEvent(const char *eventName)
                                                       "http://www.google-analytics.com/collect",
                                                       kCCHTTPRequestMethodPOST);
     request->addPOSTValue("v", "1");
-    request->addPOSTValue("tid", "UA-68691280-1");
+    request->addPOSTValue("tid", "UA-84326395-1");
     request->addPOSTValue("cid", Native::getOpenUDID().c_str());
     request->addPOSTValue("t", "event");
     

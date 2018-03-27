@@ -115,11 +115,7 @@ if CONFIG_SCREEN_AUTOSCALE and CONFIG_SCREEN_AUTOSCALE ~="NONE" then
         CONFIG_SCREEN_WIDTH = w
         CONFIG_SCREEN_HEIGHT = h
         scale = 1.0
-        if cc.bPlugin_ then
-            glview:setDesignResolutionSize(CONFIG_SCREEN_WIDTH, CONFIG_SCREEN_HEIGHT, cc.ResolutionPolicy.NO_BORDER)
-        else
-            glview:setDesignResolutionSize(CONFIG_SCREEN_WIDTH, CONFIG_SCREEN_HEIGHT, cc.ResolutionPolicy.SHOW_ALL)
-        end
+		glview:setDesignResolutionSize(CONFIG_SCREEN_WIDTH, CONFIG_SCREEN_HEIGHT, cc.ResolutionPolicy.SHOW_ALL)
     else
         if not scaleX or not scaleY then
             scaleX, scaleY = w / CONFIG_SCREEN_WIDTH, h / CONFIG_SCREEN_HEIGHT
@@ -266,9 +262,8 @@ display.DEFAULT_TTF_FONT_SIZE   = 24
 
 function display.newScene(name)
     local scene = cc.Scene:create()
-    scene:setNodeEventEnabled(true)
-    scene:setAutoCleanupEnabled()
     scene.name = name or "<unknown-scene>"
+	scene:setNodeEventEnabled(true)
     return scene
 end
 
@@ -285,12 +280,10 @@ end
 
 function display.newPhysicsScene(name)
     local scene = cc.Scene:createWithPhysics()
-    scene:setNodeEventEnabled(true)
-    scene:setAutoCleanupEnabled()
     scene.name = name or "<unknown-scene>"
+    scene:setNodeEventEnabled(true)
     return scene
 end
-
 
 -- start --
 
@@ -462,17 +455,9 @@ end
 -- end --
 
 function display.newLayer()
-    local layer
-
-    if cc.bPlugin_ then
-        layer = display.newNode()
-        layer:setContentSize(display.width, display.height)
-        layer:setTouchEnabled(true)
-    else
-        layer = cc.Layer:create()
-    end
-
-    return layer
+    local node = cc.Node:create()
+	node:setContentSize(cc.size(display.width, display.height))
+	return node
 end
 
 -- start --
@@ -487,26 +472,7 @@ end
 -- end --
 
 function display.newColorLayer(color)
-    local node
-
-    if cc.bPlugin_ then
-        node = display.newNode()
-        local layer = cc.LayerColor:create(color)
-        node:addChild(layer)
-        node:setTouchEnabled(true)
-        node:setTouchSwallowEnabled(true)
-
-        node.setContentSize = function(_, ...)
-            layer:setContentSize(...)
-        end
-        node.getContentSize = function()
-            return layer:getContentSize()
-        end
-    else
-        node = cc.LayerColor:create(color)
-    end
-
-    return node
+    return cc.LayerColor:create(color)
 end
 
 -- start --
@@ -529,9 +495,6 @@ Node 对象并不能显示对象，但可以作为其他显示对象的容器（
 local group = display.newNode()     -- 创建一个容器
 group:addChild(sprite1)             -- 添加显示对象到容器中
 group:addChild(sprite2)             -- 添加显示对象到容器中
-
--- 移动容器时，其中包含的子对象也会同时移动
-transition.moveBy(group, {time = 2.0, x = 100})
 
 ~~~
 
@@ -570,7 +533,7 @@ local rect = cc.rect(display.left + 100,
                     display.bottom + 100,
                     display.width - 200,
                     display.height - 200)
-local clipnode = display.newClippingRegionNode(rect)
+local clipnode = display.newClippingRectangleNode(rect)
 
 clipnode:addChild(sprite1)
 clipnode:addChild(sprite2)
@@ -585,27 +548,8 @@ scene:addChild(clipnode)
 -- end --
 
 function display.newClippingRectangleNode(rect)
-    if rect then
-        return cc.ClippingRegionNode:create(rect)
-    else
-        return cc.ClippingRegionNode:create()
-    end
+	return cc.ClippingRegionNode:create(rect)
 end
-
--- start --
-
---------------------------------
--- 创建并返回一个 ClippingRectangleNode 对象。
--- @function [parent=#display] newClippingRegionNode
--- @param table rect 指定的区域
--- @return ClippingRectangleNode#ClippingRectangleNode ret (return value: cc.ClippingRectangleNode)  ClippingRectangleNode
-
---[[--
-旧接口,建议用display.newClippingRectangleNode代替
-]]
--- end --
-
-display.newClippingRegionNode = display.newClippingRectangleNode
 
 -- start --
 
@@ -821,71 +765,6 @@ end
 -- start --
 
 --------------------------------
--- Create a Filtered Sprite
--- @function [parent=#display] newFilteredSprite
--- @param mixed filename As same a the first parameter for display.newSprite
--- @param mixed filters One of the following:
--- @param table params A or some parameters for Filter.
--- @return FilteredSprite#FilteredSprite ret (return value: cc.FilteredSprite)
-
--- end --
-
-function display.newFilteredSprite(filename, filters, params)
-    local __one = {class=cc.FilteredSpriteWithOne}
-    local __multi = {class=cc.FilteredSpriteWithMulti}
-    if not filters then return display.newSprite(filename, nil,nil , __one) end
-    local __sp = nil
-    local __type = type(filters)
-    if __type == "userdata" then __type = tolua.type(filters) end
-    --print("display.newFSprite type:", __type)
-    if __type == "string" then
-        __sp = display.newSprite(filename, nil, nil, __one)
-        filters = filter.newFilter(filters, params)
-        __sp:setFilter(filters)
-    elseif __type == "table" then
-        assert(#filters > 1, "display.newFilteredSprite() - Please give me 2 or more filters!")
-        __sp = display.newSprite(filename, nil, nil, __multi)
-        -- treat filters as {"FILTER_NAME", "FILTER_NAME"}
-        if type(filters[1]) == "string" then
-            __sp:setFilters(filter.newFilters(filters, params))
-        else
-            -- treat filters as {Filter, Filter , ...}
-            local __filters = cc.Array:create()
-            for i in ipairs(filters) do
-                __filters:addObject(filters[i])
-            end
-            __sp:setFilters(__filters)
-        end
-    elseif __type == "Array" then
-        -- treat filters as Array(Filter, Filter, ...)
-        __sp = display.newSprite(filename, nil, nil, __multi)
-        __sp:setFilters(filters)
-    else
-        -- treat filters as Filter
-        __sp = display.newSprite(filename, nil, nil, __one)
-        __sp:setFilter(filters)
-    end
-    return __sp
-end
-
--- start --
-
---------------------------------
--- Create a Gray Sprite by FilteredSprite
--- @function [parent=#display] newGraySprite
--- @param mixed filename As same a the first parameter for display.newSprite
--- @param table params As same as the third parameter for display.newFilteredSprite
--- @return FilteredSprite#FilteredSprite ret (return value: cc.FilteredSprite)
-
--- end --
-
-function display.newGraySprite(filename, params)
-    return display.newFilteredSprite(filename, "GRAY", params)
-end
-
--- start --
-
---------------------------------
 -- 创建并返回一个空的 DrawNode 对象
 -- @function [parent=#display] newDrawNode
 -- @return DrawNode#DrawNode ret (return value: cc.DrawNode) 
@@ -1055,6 +934,81 @@ function display.newRect(rect, params)
     return display.newPolygon(points, params)
 end
 
+--[[--
+
+创建并返回一个 DrawNode （圆角矩形）对象。
+
+~~~ lua
+
+-- 创建一个长200、宽100， 圆角为40 的矩形
+
+local clipSize = cc.size(200, 100)
+local node = display.newRoundedRect(clipSize, 40, {
+	fillColor = cc.c4f(1,0,0,1),
+	borderColor = cc.c4f(0,1,0,1),
+	borderWidth = 1
+})
+node:addTo(self)
+node:center()
+~~~
+
+]]--
+
+function display.newRoundedRect(size, radius, params)
+    local radius = radius or 1
+    local segments = math.ceil(radius)
+    local radianPerSegment = math.pi * 0.5 / segments
+    local radianVertices = {}
+
+    for i = 0, segments do
+        local radian = i * radianPerSegment
+        radianVertices[i] = cc.p(math.round(math.cos(radian) * radius * 10) / 10, math.round(math.sin(radian) * radius * 10) / 10)
+    end
+
+    local points = {}
+    local tagCenter = cc.p(0, 0)
+
+    -- left up
+    tagCenter = cc.p(radius, size.height - radius)
+    for i = 0, segments do
+        local ri = i
+        points[#points + 1] = cc.p(tagCenter.x - radianVertices[ri].x, tagCenter.y + radianVertices[ri].y)
+    end
+
+    -- right up
+    tagCenter = cc.p(size.width - radius, size.height - radius)
+    for i = 0, segments do
+        local ri = segments - i
+        points[#points + 1] = cc.p(tagCenter.x + radianVertices[ri].x, tagCenter.y + radianVertices[ri].y)
+    end
+
+    -- right bottom
+    tagCenter = cc.p(size.width - radius, radius)
+    for i = 0, segments do
+        local ri = i
+        points[#points + 1] = cc.p(tagCenter.x + radianVertices[ri].x, tagCenter.y - radianVertices[ri].y)
+    end
+
+    -- left bottom
+    tagCenter = cc.p(radius, radius)
+    for i = 0, segments do
+        local ri = segments - i
+        points[#points + 1] = cc.p(tagCenter.x - radianVertices[ri].x, tagCenter.y - radianVertices[ri].y)
+    end
+    points[#points + 1] = cc.p(points[1].x, points[1].y)
+
+	params = checktable(params)
+    local borderWidth = params.borderWidth or 0.5
+    local fillColor = params.fillColor or cc.c4f(1, 1, 1, 1)
+    local borderColor = params.borderColor or cc.c4f(1, 1, 1, 1)
+    local drawNode = cc.DrawNode:create()
+    drawNode:drawPolygon(points, #points, fillColor, borderWidth, borderColor)
+    drawNode:setContentSize(size)
+	drawNode:setAnchorPoint(cc.p(0.5, 0.5))
+
+    return drawNode
+end
+
 -- start --
 
 --------------------------------
@@ -1077,7 +1031,7 @@ shape = display.newLine(point表, [参数])
 ~~~ lua
 
 -- 创建一个线宽为2，颜色为红色，从(10,10)到(100,100)的线段
-local shape3 = display.newLine({(10, 10), (100,100)},
+local shape3 = display.newLine({{10, 10}, {100,100}},
     {borderColor = cc.c4f(1.0, 0.0, 0.0, 1.0),
     borderWidth = 1})
 
@@ -1154,22 +1108,7 @@ function display.newPolygon(points, params, drawNode)
     end
 
     drawNode = drawNode or cc.DrawNode:create()
-    drawNode:drawPolygon(pts, {
-        fillColor = fillColor,
-        borderWidth = borderWidth,
-        borderColor = borderColor
-    })
-
-    if drawNode then
-        function drawNode:setLineStipple()
-        end
-
-        function drawNode:setLineStippleEnabled()
-        end
-
-        function drawNode:setLineColor(color)
-        end
-    end
+    drawNode:drawPolygon(pts, #pts, fillColor, borderWidth, borderColor)
     return drawNode
 end
 
@@ -1808,7 +1747,15 @@ display.captureScreen(
 -- end --
 
 function display.captureScreen(callback, fileName)
-    cc.utils:captureScreen(callback, fileName)
+	sharedDirector:captureScreen(function(image)
+		if image then
+			local path = cc.FileUtils:getInstance():getWritablePath() .. fileName
+			image:saveToFile(path)
+			callback(true, path)
+		else
+			callback(false)
+		end
+	end)
 end
 
 return display
